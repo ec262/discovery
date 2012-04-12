@@ -1,7 +1,6 @@
 GEM
   remote: http://rubygems.org/
   specs:
-    SystemTimer (1.2.3)
     daemons (1.1.8)
     eventmachine (0.12.10)
     json (1.6.6)
@@ -23,7 +22,6 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  SystemTimer
   json
   redis
   sinatra (= 1.3.2)
