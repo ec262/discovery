@@ -13,14 +13,15 @@ get '/' do
 end
 
 post '/register' do
-  REDIS.sadd("workers", request.ip)
+  if REDIS.sadd("workers", request.ip).to_s
+    "OK"
+  else
+    status 500
+    body "Failed to add to workers pool :/"
+  end
 end
 
 get '/workers' do
   all_workers = REDIS.smembers("workers")
-  live_workers = []
-  all_workers.each do |w|
-    # TODO: 
-  end
-  live_workers.to_json
+  all_workers.to_json
 end
