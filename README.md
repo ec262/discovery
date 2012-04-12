@@ -10,6 +10,9 @@ jobs to do.
 This app is written in Ruby with Sinatra, backed by Redis, and hosted on
 Heroku. The code should pretty much explain itself. 
 
+BEFORE ANYONE USES THIS IN PRODUCTION, let me know and we will clear out the
+dummy IP addresses.
+
 
 Get up and running locally
 --------------------------
@@ -51,5 +54,7 @@ TODO
     
   - It might also be nice to ask if workers want to accept a job from the
     requester.
+    
+  - Protected method to remove workers via HTTP.
     
   - Authentication, API keys, etc...
