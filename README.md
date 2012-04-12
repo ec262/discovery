@@ -27,11 +27,12 @@ let me know what doesn't work.
   set up to run on 6379, which is the default on Mac OS at least.
 
 
-The dead simple (and REST-ful!) API
------------------------------------
+The dead simple (and RESTful!) API
+----------------------------------
 
   - `GET /`
-    Returns the list of IP addresses of available workers in JSON.
+    Returns the list of IP addresses of available workers in JSON as an array
+    of strings.
 
   - `POST /`
     Register a worker to the worker pool by IP address. Should return status
