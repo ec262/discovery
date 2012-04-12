@@ -1,1 +1,1 @@
-web: bundle exec ruby -rubygems discovery.rb -p 4567
+web: bundle exec ruby -rubygems discovery.rb -p $PORT
