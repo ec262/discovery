@@ -1,1 +1,24 @@
-The discovery server for ec262
+The discovery server for ec262, version 0.
+
+This app is written in Sinatra, backed by Redis, hosted on Heroku, and should
+basically explain itself. Here's a tour of the dead simple API:
+
+POST /register
+  - Register a worker to the worker pool by IP address. Should return status
+    code 200 if all goes well.
+
+GET /workers
+  - Returns the list of IP addresses of available workers in JSON.
+  
+-------------------------------------------------------------------------------
+ 
+TODO
+
+  - Before sending back the list of workers, the server should quickly ping
+    the workers (or at least the ones it hasn't pinged recently) and make sure
+    they're still alive and accepting jobs.
+    
+  - It might also be nice to see if workers want to accept a job from the
+    requester
+    
+  - Authentication, API keys, etc...
