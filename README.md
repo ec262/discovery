@@ -21,14 +21,12 @@ You'll want to run some or all of these commands--I'm sure I'm missing some, so
 let me know what doesn't work.
 
 1. `bundle install`
-
   This installs all the required gems; you'll need to "`gem install bundle`"
   first if you have not yet done so.
 
 2. `echo "REDISTOGO_URL='redis://127.0.0.1:6379'" > .env`
-
-  This lets you run Redis locally without fuss. Assumes your Redis server is set
-up to run on 6379, which is the default on Mac OS at least.
+  This lets you run Redis locally without fuss. Assumes your Redis server is
+  set up to run on 6379, which is the default on Mac OS at least.
 
 
 The dead simple API
