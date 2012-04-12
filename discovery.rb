@@ -13,8 +13,9 @@ get '/' do
   all_workers.to_json
 end
 
-post '/' do
-  if REDIS.sadd("workers", request.ip).to_s
+post '/?:ip?' do
+  ip = params[:ip] || request.ip
+  if REDIS.sadd("workers", ip).to_s
     "OK"
   else
     status 500

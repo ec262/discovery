@@ -38,6 +38,9 @@ The dead simple (and RESTful!) API
     Register a worker to the worker pool by IP address. Should return status
     code 200 if all goes well.
 
+  - `POST /:ip`
+    Post a specific IP address, perhaps with a port.
+
   - `DELETE /:ip`
     Delete a worker with the given IP address.
     
