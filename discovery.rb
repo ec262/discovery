@@ -13,7 +13,7 @@ get '/' do
   all_workers.to_json
 end
 
-post '/register' do
+post '/' do
   if REDIS.sadd("workers", request.ip).to_s
     "OK"
   else
@@ -22,3 +22,11 @@ post '/register' do
   end
 end
 
+delete '/:ip' do
+  if REDIS.srem("workers", params[:ip])
+    "OK"
+  else
+    status 500
+    body "Error in removing worker #{params[:ip]}"
+  end
+end

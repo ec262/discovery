@@ -10,8 +10,6 @@ jobs to do.
 This app is written in Ruby with Sinatra, backed by Redis, and hosted on
 Heroku. The code should pretty much explain itself. 
 
-BEFORE ANYONE USES THIS IN PRODUCTION, let me know and we will clear out the
-dummy IP addresses.
 
 
 Get up and running locally
@@ -29,21 +27,26 @@ let me know what doesn't work.
   set up to run on 6379, which is the default on Mac OS at least.
 
 
-The dead simple API
--------------------
+The dead simple (and REST-ful!) API
+-----------------------------------
 
   - `GET /`
     Returns the list of IP addresses of available workers in JSON.
 
-  - `POST /register`
+  - `POST /`
     Register a worker to the worker pool by IP address. Should return status
     code 200 if all goes well.
 
+  - `DELETE /:ip`
+    Delete a worker with the given IP address.
+    
   
  
 TODO
 ----
 
+  - Authentication! Don't just let anyone do this stuff.
+  
   - Before sending back the list of workers, the server should quickly ping
     the workers (or at least the ones it hasn't pinged recently) and make sure
     they're still alive and accepting jobs. Which means that...
@@ -52,7 +55,3 @@ TODO
     
   - It might also be nice to ask if workers want to accept a job from the
     requester.
-    
-  - Protected method to remove workers via HTTP.
-    
-  - Authentication, API keys, etc...
