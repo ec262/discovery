@@ -9,7 +9,8 @@ configure do
 end
 
 get '/' do
-  "Hello world"
+  all_workers = REDIS.smembers("workers")
+  all_workers.to_json
 end
 
 post '/register' do
@@ -21,7 +22,3 @@ post '/register' do
   end
 end
 
-get '/workers' do
-  all_workers = REDIS.smembers("workers")
-  all_workers.to_json
-end
