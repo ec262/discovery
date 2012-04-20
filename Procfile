@@ -1,1 +1,1 @@
-web: bundle exec ruby discovery.rb -p $PORT -e production
+web: bundle exec ruby discovery.rb -p $PORT
