@@ -1,11 +1,20 @@
 require 'sinatra'
 require 'json'
+require 'set'
 
-configure do
+configure :production, :development do
   require 'redis'
   uri = URI.parse(ENV["REDISTOGO_URL"])
   REDIS = Redis.new(:host => uri.host, :port => uri.port, :password => uri.password)
-  puts "Setup Redis with host #{ uri.to_s }"
+end
+
+configure :development, :test do
+  require 'system_timer'
+end
+
+configure :test do
+  require 'mock_redis'
+  REDIS = MockRedis.new
 end
 
 get '/' do
@@ -13,9 +22,9 @@ get '/' do
   all_workers.to_json
 end
 
-post '/?:ip?' do
-  ip = params[:ip] || request.ip
-  if REDIS.sadd("workers", ip).to_s
+post '/?:addr?' do
+  addr = params[:addr] || request.ip
+  if REDIS.sadd("workers", addr).to_s
     "OK"
   else
     status 500
@@ -23,11 +32,8 @@ post '/?:ip?' do
   end
 end
 
-delete '/:ip' do
-  if REDIS.srem("workers", params[:ip])
-    "OK"
-  else
-    status 500
-    body "Error in removing worker #{params[:ip]}"
-  end
+delete '/?:addr?' do
+  addr = params[:addr] || request.ip
+  REDIS.srem("workers", addr)
+  "OK" # Return OK even if srem returns false (when there is no such member)
 end

@@ -34,12 +34,13 @@ The dead simple (and RESTful!) API
     Returns the list of IP addresses of available workers in JSON as an array
     of strings.
 
-  - `POST /(:ip)`
-    Register a worker to the worker pool by IP address. If no IP address given,
-    register the IP of the requester. Returns status code 200 if all goes well.
+  - `POST /(:addr)`
+    Register a worker to the worker pool by address. If no address given,
+    register the address of the requester. Returns status code 200 if all goes
+    well.
 
-  - `DELETE /:ip`
-    Delete a worker with the given IP address.
+  - `DELETE /:addr`
+    Delete a worker with the given address.
     
   
  
