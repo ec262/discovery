@@ -6,7 +6,6 @@ GEM
     diff-lcs (1.1.3)
     eventmachine (0.12.10)
     json (1.6.6)
-    mock_redis (0.4.1)
     rack (1.4.1)
     rack-protection (1.2.0)
       rack
@@ -37,7 +36,6 @@ PLATFORMS
 DEPENDENCIES
   SystemTimer
   json
-  mock_redis
   rack-test
   redis
   rspec
