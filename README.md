@@ -69,6 +69,7 @@ The REST API
     If the call is successful, the server returns status code 200 and a JSON
     object with keys corresponding to chunk IDs, and each key containing an
     array of the three workers that are assigned to that chunk, e.g.
+
         { chunk1: [worker1, worker2, worker4],
           chunk2: [worker5, worker3, worker7] }
           
