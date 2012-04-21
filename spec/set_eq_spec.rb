@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'Set Equality method' do
+describe 'Set Equality Method' do
   a = [1, 2, 3]
   b = [1, 2, 3]
   c = [1, 2, 4]

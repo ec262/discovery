@@ -12,7 +12,7 @@ describe 'The Discovery Service' do
   # Also just do a regular post along with "127.0.0.1"; should be the same.
   # Because of set inclusion, there should be no duplicates
   before(:each) do
-    REDIS.flushall
+    REDIS.flushdb
     post '/'
     addrs = ["127.0.0.1", "example.com", "tom-buckley.com:8931"]
     addrs.each do |addr|
@@ -32,12 +32,11 @@ describe 'The Discovery Service' do
   end
   
   it "deletes workers from the set" do
-    del_addrs = addrs # copy addrs
+    del_addrs = Array.new(addrs)
     
     # Delete a bunch of addresses, including garbage values, make sure it works
     del_addrs.delete("127.0.0.1")
     delete '/'
-    puts last_response.body
     last_response.should be_ok  
     
     delete "/#{del_addrs.pop}"
@@ -47,7 +46,8 @@ describe 'The Discovery Service' do
     last_response.should be_ok
     
     get '/'
+    
     response = JSON.parse(last_response.body)
-    response.set_eq(addrs).should be_true
+    response.set_eq(del_addrs).should be_true
   end
 end
