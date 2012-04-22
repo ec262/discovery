@@ -14,3 +14,13 @@ class Array
     (self.size == s.size) && (self.size == (self & s).size)
   end
 end
+
+def seed_db_with_workers(addrs)
+  post "/workers"
+  addrs.each do |addr|
+    post "/workers", params={:addr=>addr}
+  end
+end
+
+def create_chunks(n=10)
+end
