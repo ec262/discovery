@@ -1,47 +1,14 @@
-require 'sinatra'
-require 'json'
-require 'set'
-
-NUM_STARTING_CREDITS = 12
-DEFAULT_PORT = 2626
-DEFAULT_WORKER_TTL = 60
-DEFAULT_CHUNK_TTL = 86400 # 1 day
-
-
-configure do
-  # Set up Redis
-  require 'redis'
-  uri = URI.parse(ENV["REDISTOGO_URL"])
-  REDIS = Redis.new(:host => uri.host, :port => uri.port, :password => uri.password)
-
-  # Use the system timer gem if running on Ruby 1.8
-  require 'system_timer' if RUBY_VERSION =~ /^1.8/
-end
-
-configure :production, :development do
-  REDIS.select(0) # Use default database
-end
-
-configure :development, :test do
-end
-
-configure :test do
-  REDIS.select(1) # Use a different test DB
-  REDIS.flushdb
-end
+require 'config'
 
 #########################################
 ########### Foreman Methods #############
 #########################################
 
-require 'lib/foreman_api'
-
 post '/chunks' do
   foreman = request.ip
   num_chunks = params[:n]
-  workers = get_workers(num_chunks * 3)
-  workers.delete(foreman) # Make sure workers don't include foreman
-  
+  workers = get_workers(num_chunks * 3, foreman)
+    
   # Round workers down to multiple of 3, update num_chunks
   num_workers = workers.length - (workers.length % 3)
   workers = workers.take(num_workers)
@@ -64,9 +31,7 @@ post '/chunks' do
     chunk_key = generate_chunk_key
     REDIS.hmset("chunks:#{chunk_id}", "foreman", foreman, "workers", chunk_workers.join(','), "key", chunk_key)
     REDIS.expire("chunks:#{chunk_id}", DEFAULT_CHUNK_TTL)
-    
-    # Append ports of workers to their address for foreman
-    chunk[chunk_id] = chunk_workers.map{ |w| w + ':' + REDIS.hget("clients:#{w}", "port") }
+    chunk[chunk_id] = chunk_workers.map{ |w| w + ':' + REDIS.hget("clients:#{w}", "port") } # Append workers' ports to address
   end
 
   # Dock credits from foreman and return
@@ -103,8 +68,6 @@ end
 ########### Worker Methods ##############
 #########################################
 
-require 'lib/worker_api'
-
 post '/workers' do
   addr = params[:addr] || request.ip
   port = params[:port] || DEFAULT_PORT
@@ -120,7 +83,10 @@ end
 
 get '/chunks/:id' do
   chunk = REDIS.hmget("chunks:#{params[:id]}")
-  if chunk["workers"].split(',').index(request.ip)
+  if chunk == {}
+    status 404
+    body "\"Chunk expired or does not exist.\""
+  elsif chunk["workers"].split(',').index(request.ip)
     "\"#{chunk["key"]}\""
   else
     status 403
@@ -145,7 +111,7 @@ get '/workers/:addr' do
     worker.to_json
   else
     status 404
-    body '"No information about that worker"'
+    body "\"No information about that worker\""
   end
 end
 
