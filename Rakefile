@@ -29,27 +29,32 @@ task :seed, [:db, :worker_addr] do |t, args|
   puts "Created chunks " + chunks.inspect
 end
 
-task :test_remote do
-  require 'socket'
-  public_ip = UDPSocket.open {|s| s.connect('64.233.187.99', 1); s.addr.last }
-  
-  def call_remote  
-    def method_missing(*args)
-      method, path = args
-      if [:get, :post, :delete].index(method)
-        sh "\ncurl -w '\\n' -X #{method.to_s.upcase} http://ec262discovery.herokuapp.com#{path}"
-      end
-    end
-
-    yield
+namespace :test do
+  task :local do
+    sh 'bundle exec rspec'
   end
   
-  sh "heroku run rake seed[0,#{public_ip}]"
-  call_remote do
-    get '/chunks/1'
-    post '/chunks?n=2'
-    get '/'
-    delete '/chunks/2?valid=1'
+  task :remote do
+    require 'socket'
+    public_ip = UDPSocket.open {|s| s.connect('64.233.187.99', 1); s.addr.last }
+  
+    def call_remote  
+      def method_missing(*args)
+        method, path = args
+        if [:get, :post, :delete].index(method)
+          sh "\ncurl -w '\\n' -X #{method.to_s.upcase} http://ec262discovery.herokuapp.com#{path}"
+        end
+      end
+
+      yield
+    end
+  
+    sh "heroku run rake seed[0,#{public_ip}]"
+    call_remote do
+      get '/chunks/1'
+      post '/chunks?n=2'
+      get '/'
+      delete '/chunks/2?valid=1'
+    end
   end
 end
-
