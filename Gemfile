@@ -6,9 +6,11 @@ gem 'thin'
 gem 'redis'
 gem 'redis-lock'
 
+gem 'rspec'
+gem 'rack-test'
+
+
 group :development, :test do
   gem 'SystemTimer'
   gem 'shotgun'
-  gem 'rspec'
-  gem 'rack-test'
 end
