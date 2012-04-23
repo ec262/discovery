@@ -30,6 +30,6 @@ configure :production, :development do
 end
 
 configure :test do
-  # REDIS.select(1) # Use a different test DB
+  REDIS.select(1) # Use a different test DB
   REDIS.flushdb
 end
