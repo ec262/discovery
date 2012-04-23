@@ -58,13 +58,13 @@ def call_remote
 end
 
 task :test_remote do |t, args|
-    sh "heroku run rake seed[0,#{get_public_ip}]"
-    call_remote do
-      get '/chunks/1'
-      post '/chunks', :n => 2
-      get '/'
-      delete '/chunks/2?valid=1'
-    end
+  sh "heroku run rake seed[0,#{get_public_ip}]"
+  call_remote do
+    get '/chunks/1'
+    post '/chunks', :n => 2
+    get '/'
+    delete '/chunks/2?valid=1'
+  end
 end
 
 task :server do
