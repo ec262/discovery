@@ -12,6 +12,8 @@ GEM
     rack-test (0.6.1)
       rack (>= 1.0)
     redis (2.2.2)
+    redis-lock (0.1.0)
+      redis
     rspec (2.9.0)
       rspec-core (~> 2.9.0)
       rspec-expectations (~> 2.9.0)
@@ -38,6 +40,7 @@ DEPENDENCIES
   json
   rack-test
   redis
+  redis-lock
   rspec
   sinatra (= 1.3.2)
   thin

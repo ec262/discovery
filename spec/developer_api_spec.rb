@@ -10,7 +10,7 @@ describe 'The Discovery Service' do
   
   before(:each) do
     REDIS.flushdb
-    addrs = ["127.0.0.1", "example.com", "tom-buckley.com"]
+    addrs = generate_addrs(10) #["127.0.0.1", "example.com", "tom-buckley.com"]
     seed_db_with_workers(addrs)
   end
     

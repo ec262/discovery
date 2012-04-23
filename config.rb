@@ -2,13 +2,15 @@ require 'sinatra'
 require 'json'
 require 'set'
 
-require 'lib/foreman_api'
-require 'lib/worker_api'
+require './lib/chunks'
+require './lib/workers'
 
 NUM_STARTING_CREDITS = 12
 DEFAULT_PORT = 2626
 DEFAULT_WORKER_TTL = 60
 DEFAULT_CHUNK_TTL = 86400 # 1 day
+LOCK_TIMEOUT = 10
+LOCK_MAX_ATTEMPTS = 100
 
 configure do
   # Set up Redis
@@ -31,4 +33,3 @@ configure :test do
   REDIS.select(1) # Use a different test DB
   REDIS.flushdb
 end
-

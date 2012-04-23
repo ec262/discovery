@@ -1,72 +1,58 @@
-require 'config'
+require 'sinatra'
+require './config'
 
 #########################################
 ########### Foreman Methods #############
 #########################################
 
-post '/chunks' do
-  foreman = request.ip
-  num_chunks = params[:n]
-  workers = get_workers(num_chunks * 3, foreman)
-    
-  # Round workers down to multiple of 3, update num_chunks
-  num_workers = workers.length - (workers.length % 3)
-  workers = workers.take(num_workers)
-  num_chunks = workers.length / 3
-  
-  # Make sure Foreman has enough credits
-  available_credits = REDIS.hget("clients:#{foreman}", "credits")
-  if available_credits < workers.length
-    status 406
-    body "\"Sorry, do you do not have sufficient credits to request this many chunks.
-          (Need #{workers.length}, only have #{available_credits}.)\""
-    return
-  end
-  
-  # Assign workers to chunks and generate keys
-  chunks = {} 
-  num_chunks.times do
-    chunk_id = REDIS.incr("chunks")
-    chunk_workers = workers.pop(3)
-    chunk_key = generate_chunk_key
-    REDIS.hmset("chunks:#{chunk_id}", "foreman", foreman, "workers", chunk_workers.join(','), "key", chunk_key)
-    REDIS.expire("chunks:#{chunk_id}", DEFAULT_CHUNK_TTL)
-    chunk[chunk_id] = chunk_workers.map{ |w| w + ':' + REDIS.hget("clients:#{w}", "port") } # Append workers' ports to address
-  end
+# POST /chunks?n=num_chunks
+# Pay for a list of chunks and their associated workers; returns at most
+# num_chunks chunks (could be less)
 
-  # Dock credits from foreman and return
-  REDIS.hincrby("clients:#{foreman}", "credits",  -workers.length)
-  chunks.to_json
+post '/chunks' do
+  foreman_addr = request.ip
+  workers = get_chunk_workers(params[:n], foreman_addr)
+  
+  # Make sure foreman has enough credits
+  if atomic_deduct_credits(workers.length, foreman_addr)
+    # Number of chunks could be less than requested
+    make_chunks(workers.length / 3, foreman_addr).to_json
+  else
+    status 406
+    {
+      :credits_needed => workers.length,
+      :credits_available => get_client(foreman_addr)["credits"]
+    }.to_json
+  end
 end
+
+
+# DELETE /chunks/:id(?valid=1)
+# If a chunk is valid, return a key and give credits to workers. Otherwise
+# restore credits to the foreman and return how many credits the foreman has.
+# If request is invalid, don't tell the user whether the chunk doesn't exist or
+# they simply don't have access
 
 delete '/chunks/:id' do
-  foreman = request.ip
-  chunk = REDIS.hgetall("chunks:#{params[:id]}")
+  foreman_addr = request.ip
+  chunk_id = params[:id]
+  valid = (params[:valid].to_i == 1)
   
-  # Make sure everything's valid
-  if chunk == {}
-    status 404
-    body "\"Chunk expired or does not exist.\""
-    return
-  elsif chunk["foreman"] != foreman
-    status 403
-    body "\"You do not have permission to delete this chunk.\""
-    return
-  end
-  
-  # IF so, delete and decide what to do
-  REDIS.del("chunks:#{params[:id]}")
-  if params[:valid].to_i == 1
-    chunk[:key].to_json
+  if result = atomic_delete_chunk(chunk_id, foreman_addr, valid)
+    result.to_json
   else
-    REDIS.hincrby("clients:#{request.ip}", 3)
-    "\"Three credits have been restored.\""
+    status 404
+    "Unknown chunk".to_json 
   end
 end
+
 
 #########################################
 ########### Worker Methods ##############
 #########################################
+
+# POST /workers?addr=A&port=P&ttl=T
+# Register as a worker
 
 post '/workers' do
   addr = params[:addr] || request.ip
@@ -74,24 +60,32 @@ post '/workers' do
   ttl = params[:ttl] || DEFAULT_WORKER_TTL
       
   if add_worker(addr, port, ttl)
-    '"OK"'
+    "OK".to_json
   else
     status 500
-    body '"Failed to add to workers pool :/"'
+    "Failed to add to workers pool :/".to_json
   end
 end
 
+# GET /chunks/:id
+# Return a key to workers involved in a chunk
+
 get '/chunks/:id' do
-  chunk = REDIS.hmget("chunks:#{params[:id]}")
+  chunk = get_chunk(params[:id])
+  
+  # Make sure chunk exists
   if chunk == {}
     status 404
-    body "\"Chunk expired or does not exist.\""
-  elsif chunk["workers"].split(',').index(request.ip)
-    "\"#{chunk["key"]}\""
-  else
-    status 403
-    body "\"You do not have permission to get this key.\""
+    return "Chunk expired or does not exist.".to_json
   end
+  
+  # Make sure worker permitted to access key
+  unless chunk["workers"].split(',').index(request.ip)
+    status 403
+    return "You do not have permission to get this key.".to_json
+  end
+  
+  chunk["key"].to_json
 end
 
 #########################################
@@ -99,25 +93,22 @@ end
 #########################################
 
 get '/' do 
-  request.ip
+  status 404
+  request.ip.to_json
 end
 
 get '/workers' do  
-  get_workers.to_json
+  get_all_workers.to_json
 end
 
 get '/workers/:addr' do
-  if worker = REDIS.hgetall("clients:#{params[:addr]}")
-    worker.to_json
-  else
-    status 404
-    body "\"No information about that worker\""
-  end
+  body worker = get_client(params[:addr]).to_json
+  status 404 if worker == {}
 end
 
 delete '/workers/?:addr?' do
   addr = params[:addr] || request.ip
   REDIS.zrem("workers", addr)
-  '"OK"' # Return OK even if srem returns false (when there is no such member)
+  "OK".to_json # Return OK even if srem returns false (when there is no such member)
 end
 

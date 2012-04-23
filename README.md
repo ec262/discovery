@@ -87,16 +87,15 @@ The REST API
     more workers.
     
           
-  - `DELETE /chunks/:id?valid=(1|0)`
+  - `DELETE /chunks/:id?(valid=1)`
     Tell the discovery server that a chunk computation is valid or has failed.
-    With invalid or no parameters, assume the computation failed. If the
-    computation is valid, then the foreman gets the key associated with
+    If the computation is valid, then the foreman gets the key associated with
     the chunk. If the computation failed, the foreman gets 3 credits returned
-    to his account. Note that this call is _idempotent_; calling it actually
-    deletes the given chunk (to prevent cheating). If the address of the
-    foreman associated with that chunk is not used to make this call, it
-    returns 403 (forbidden). Chunks expire after 24h even if the delete method
-    is not called.
+    to his account and the number of available credits is returned. Note that
+    this call is _idempotent_; calling it actually deletes the given chunk (to
+    prevent cheating). If the address of the foreman associated with that chunk
+    is not used to make this call, it returns 403 (forbidden). Chunks expire
+    after 24h even if the delete method is not called.
           
 ### Worker API
 
@@ -181,9 +180,12 @@ Known vulnerabilities
  
 TODO
 ----
-  - Finish implementing!
   
   - IP vs. host? 
     
-  - TESTING: check failure cases as well
+  - Test test test, including failure cases
+  
+  - Proper key generation
+  
+  - Figure out TTLs
   

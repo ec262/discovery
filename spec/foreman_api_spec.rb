@@ -14,7 +14,13 @@ describe 'Foreman API' do
     seed_db_with_workers(addrs)
   end
   
-  it "gives you well-formed chunks" do
+  it "gives you chunks when you request them" do
+  end
+  
+  it "says you have the right number of credits" do
+  end
+  
+  it "lets you request workers if you've never registered before" do
   end
   
   it "removes credits from your account for requesting chunks" do

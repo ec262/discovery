@@ -15,12 +15,15 @@ class Array
   end
 end
 
+def generate_addrs(n)
+  Array.new(n).map do
+    Array.new(4).map{rand(256)}.join('.')
+  end
+end
+
 def seed_db_with_workers(addrs)
   post "/workers"
   addrs.each do |addr|
     post "/workers", params={:addr=>addr}
   end
-end
-
-def create_chunks(n=10)
 end
