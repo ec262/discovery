@@ -81,8 +81,8 @@ The REST API
     object with keys corresponding to chunk IDs, and each key containing an
     array of the three workers that are assigned to that chunk, e.g.
 
-        { chunk1: [worker1:port, worker2:port, worker3:port],
-          chunk2: [...], ... }
+        { "1": ["worker1:port", "worker2:port", "worker3:port"],
+          "2": ["worker4:port", ...], ... }
           
     If there are not enough available workers, the foreman will only get
     charged for the workers assigned, and can make subsequent requests for
@@ -91,33 +91,43 @@ The REST API
           
   - `DELETE /chunks/:id?(valid=1)`
     Tell the discovery server that a chunk computation is valid or has failed.
-    If the computation is valid, then the foreman gets the key associated with
-    the chunk. If the computation failed, the foreman gets 3 credits returned
-    to his account and the number of available credits is returned. Note that
-    this call is _idempotent_; calling it actually deletes the given chunk (to
-    prevent cheating). If the address of the foreman associated with that chunk
-    is not used to make this call, or if the chunk does not exist, it returns
-    404 (forbidden) to prevent malicious behavior. Chunks expire after 24h even
-    if the delete method is not called.
+    If the computation is valid, then the foreman gets a JSON object containing
+    the key associated with the chunk, e.g.: 
+    
+        { "key": "8238539950397531954578546" }
+        
+    If the computation failed, the foreman gets 3 credits returned to his
+    account and the number of available credits is returned, e.g.
+    
+        { "credits": 12 }
+    
+    Note that this call is _idempotent_; calling it actually deletes the given
+    chunk (to prevent cheating). [2] If the address of the foreman associated
+    with that chunk is not used to make this call, or if the chunk does not
+    exist, it returns 404 to prevent malicious behavior. Chunks expire after
+    24h even if the delete method is not called.
+    
           
 ### Worker API
 
   - `POST /workers?port=P&ttl=T`
-    Register a worker to the worker pool by address and port. If no address
-    given, register the address of the requester. Default port is 2626. Workers
-    can also specify a time to live in seconds; by default registrations last
-    for 1m. Returns status code 200 if all goes well.
+    Register a worker to the worker pool by requesting IP address. Default port
+    is 2626. Workers can also specify a time to live in seconds; by default
+    registrations last for 1m. Workers should re-register before their TTL
+    period expires. Workers can also de-register at any time by setting a TTL
+    of -1. Returns a JSON object containing information about the requester.
     
   - `GET /chunks/:id`
-    Workers use this to get the key to encrypt their chunk data. Returns 200 if
-    the worker is in fact assigned to that chunk. If the address of the
-    foreman associated with that chunk is not used to make this call, it
-    returns 403 (forbidden). 
+    Workers use this to get the key to encrypt their chunk data. If permitted,
+    it returns a JSON object with the requested key, e.g.
     
-    If
+        { "key": "8238539950397531954578546" }
+        
+    If the chunk does not exist, or the address of the requester is not one of
+    the assigned workers, it returns 404.
 
   - `GET /`
-    Returns info about the requester.
+    Returns a JSON object containing info about the requester.
 
 
 Redis Schema
@@ -151,10 +161,24 @@ This way we can quickly get the port and credit count of a client.
         foreman: {addr}
         workers: [{addr1}, {addr2}, {addr3}]
         key: {k}
+        
+    chunks
+        {id}
 
 Each chunk has its own hash, with fields for the assigned foreman, worker, and
 key. Only assigned workers can see the key; only the foreman can destroy the
-chunk. Chunks expire after a given interval (for now, 24h).
+chunk. Chunks expire after a given interval (for now, 24h). We also keep a
+single key, `chunks`, that keeps track of the last chunk created.
+
+### Locks
+
+    lock:chunks:{id}
+    
+    lock:clients:{id}
+
+Foremen need to be locked when they request chunks, and their accounts are
+debited. Chunks need to be locked when foreman request their deletion. We
+use the `redis-lock` library to manage these locks.
 
     
 Known vulnerabilities
