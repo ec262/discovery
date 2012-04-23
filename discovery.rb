@@ -12,12 +12,11 @@ require './config'
 post '/chunks' do
   foreman_addr = request.ip
   num_chunks_requested = params[:n].to_i
-  workers = get_chunk_workers(num_chunks_requested, foreman_addr)
+  workers = get_chunk_workers(foreman_addr, num_chunks_requested)
   
   # Make sure foreman has enough credits
-  if atomic_deduct_credits(workers.length, foreman_addr)
-    # Number of chunks could be less than requested
-    json make_chunks(workers.length / 3, foreman_addr, workers)
+  if atomic_deduct_credits(foreman_addr, workers.length)
+    json make_chunks(foreman_addr, workers)
   else
     status 406
     json  :credits_needed => workers.length,
@@ -35,7 +34,7 @@ end
 delete '/chunks/:id' do
   foreman_addr = request.ip
   chunk_id = params[:id]
-  valid = (params[:valid].to_i == 1)
+  valid = (params[:valid] == '1')
   
   if result = atomic_delete_chunk(chunk_id, foreman_addr, valid)
     json result
@@ -70,49 +69,22 @@ end
 # Return a key to workers involved in a chunk
 
 get '/chunks/:id' do
-  chunk = get_chunk(params[:id])
+  client_addr = request.ip
+  chunk_id = params[:id]
   
-  # Make sure chunk exists
-  if chunk == {}
+  if chunk_key = get_chunk_key(chunk_id, client_addr)
+    json :key => chunk_key
+  else
     status 404
-    json :error => "Chunk expired or does not exist."
+    json :error => "Unknown chunk"
   end
-  
-  # Make sure worker permitted to access key
-  unless chunk["workers"].split(',').index(request.ip)
-    status 403
-    json :error => "You do not have permission to get this key."
-  end
-  
-  json :key => chunk["key"]
 end
 
 #########################################
 ######## Development Methods ############
 #########################################
 
-get '/' do 
-  status 404
-  json :ip => request.ip
-end
-
-get '/workers' do  
-  json get_all_workers
-end
-
-get '/workers/:addr' do
-  worker = get_client(params[:addr])
-  if worker == {}
-    status 404
-    json :error => "Unknown worker"
-  else
-    json worker
-  end
-end
-
-delete '/workers/?:addr?' do
-  addr = params[:addr] || request.ip
-  REDIS.zrem("workers", addr)
-  json :status => "OK" # Even if the worker didn't exist
+get '/' do
+  json get_client(request.ip)
 end
 

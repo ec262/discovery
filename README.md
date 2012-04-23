@@ -33,7 +33,8 @@ How the protocol works
 1.  Workers register with their address and a port (or with their own address
     and default port if none is given). They start out with 12 credits, and can
     earn more if they do more work. Credit counts never reset per address. 
-    Registrations last for 1m by default; workers can also remove registers.
+    Registrations last for 1m by default; workers can unregister by sending a
+    registration request with a TTL of -1.
     
 2.  Foremen request jobs by specifying a number of chunks. If they want _n_
     chunks, they will pay with 3_n_ credits. (If a foreman has never acted as
@@ -122,11 +123,6 @@ removed in future versions.**
   
   - `GET /workers/:addr`
     Returns internal DB state relating to the requested worker.
-
-  - `DELETE /workers/(:addr)` 
-    Delete a worker with the given address (or the address of the requester).
-    Does not remove information about credits; otherwise foremen could just
-    keep deleting their account and run 12-credit jobs.
 
 
 Redis Schema

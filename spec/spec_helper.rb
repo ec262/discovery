@@ -7,13 +7,6 @@ RSpec.configure do |conf|
   conf.include Rack::Test::Methods
 end
 
-class Array
-  # Basic set equality on arrays. Just sort them and chek that they're the same
-  def set_eq(s)
-    self.sort == s.sort
-  end
-end
-
 def generate_addrs(n)
   addrs = Array.new(n).map do
     Array.new(4).map{rand(256)}.join('.')

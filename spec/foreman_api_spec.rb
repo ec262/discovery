@@ -36,9 +36,8 @@ describe 'Foreman API' do
   
   it "removes credits from your account for requesting chunks" do
     post '/chunks?n=2'
-    get '/workers/127.0.0.1'
-    response = JSON.parse(last_response.body)
-    response["credits"].to_i.should == 6
+    foreman = get_client("127.0.0.1")
+    foreman["credits"].to_i.should == 6
   end
   
   it "lets you spend all your credits" do
@@ -72,28 +71,46 @@ describe 'Foreman API' do
     last_response.status.should == 406
   end
     
-  it "returns the right key; doesn't return credits when you report that a chunk is correct" do
+  it "returns the right key; doesn't return credits; pays workers when you report that a chunk is correct" do
     post '/chunks?n=4'
     chunks = JSON.parse(last_response.body)
     chunks.each_pair do |chunk_id, workers|
       actual_key = REDIS.hget("chunks:#{chunk_id}", "key")
+      worker_credits = {}
+      workers.each do |worker_pair|
+        addr, port = worker_pair.split(":")
+        worker_credits[addr] = get_client(addr)["credits"].to_i
+      end
+      # puts worker_credits.inspect
       delete "/chunks/#{chunk_id}?valid=1"
       last_response.should be_ok
       response = JSON.parse(last_response.body)
       response["key"].should == actual_key
       get_client("127.0.0.1")["credits"].to_i.should == 0
+      worker_credits.each_pair do |addr, credits|
+        # puts addr, get_client(addr)["credits"].to_i
+        (credits + 1).should == get_client(addr)["credits"].to_i
+      end
     end
   end
   
-  it "doesn't return a key; returns your credits when you report that a chunk is incorrect" do
+  it "doesn't return a key; returns your credits; doesn't pay workers when you report that a chunk is incorrect" do
     post '/chunks?n=4'
     chunks = JSON.parse(last_response.body)
     chunks.each_pair do |chunk_id, workers|
       actual_key = REDIS.hget("chunks:#{chunk_id}", "key")
+      worker_credits = {}
+      workers.each do |worker_pair|
+        addr, port = worker_pair.split(":")
+        worker_credits[addr] = get_client(addr)["credits"].to_i
+      end
       delete "/chunks/#{chunk_id}"
       last_response.should be_ok
       response = JSON.parse(last_response.body)
       response["key"].should be_nil
+      worker_credits.each_pair do |addr, credits|
+        credits.should == get_client(addr)["credits"].to_i
+      end
     end
     get_client("127.0.0.1")["credits"].to_i.should == 12
   end
@@ -128,7 +145,7 @@ describe 'Foreman API' do
   end
   
   it "doesn't let you delete chunks that aren't yours" do
-    make_chunks(4, "255.255.255.255", addrs)
+    make_chunks("255.255.255.255", addrs)
     chunks = JSON.parse(last_response.body)
     chunks.each_pair do |chunk_id, workers|
       delete "/chunks/#{chunk_id}"

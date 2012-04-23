@@ -22,3 +22,7 @@ end
 task :server do
   sh "bundle exec shotgun --server=thin --port=5000 discovery.rb"
 end
+
+task :test do
+  sh "rspec"
+end
