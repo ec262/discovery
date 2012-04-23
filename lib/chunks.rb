@@ -21,7 +21,11 @@ end
 def get_chunk_workers(foreman_addr, num_chunks)
   workers = get_available_workers
   workers.delete(foreman_addr) # Don't include foreman
-  workers.take(num_chunks * 3) # Get 3 workers per chunk
+  workers = workers.take(num_chunks * 3) # Get 3 workers per chunk
+  workers.each do |worker|
+    REDIS.zrem("workers", worker)
+  end
+  return workers
 end
 
 # Threadsafe way to check if foreman has enough credits, and deduct if sufficient

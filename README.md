@@ -15,8 +15,8 @@ Heroku.
 Get up and running locally
 --------------------------
 
-You'll want to run some or all of these commands--I'm sure I'm missing some, so
-let me know what doesn't work.
+You'll want to run some or all of these commands. (I'm sure I'm missing some, so
+let me know what doesn't work.)
 
 1.  `bundle install`
     This installs all the required gems; you'll need to `gem install bundle`
@@ -40,7 +40,8 @@ How the protocol works
     chunks, they will pay with 3_n_ credits. (If a foreman has never acted as
     a worker, they will start with 12 credits.) The discovery service responds
     with a list of chunks and the workers assigned to them. The discovery
-    service tries to respond with chunks that are available, but if not
+    service tries to respond with chunks that are available, but does not
+    guarantee it. [1]
 
 3.  By default, workers are single threaded; thus, they will be removed from
     the worker pool once they are assigned a chunk. However, if they wish to
@@ -80,8 +81,8 @@ The REST API
     object with keys corresponding to chunk IDs, and each key containing an
     array of the three workers that are assigned to that chunk, e.g.
 
-        { chunk1: [worker1, worker2:port, worker4],
-          chunk2: [worker5, worker3, worker7:port] }
+        { chunk1: [worker1:port, worker2:port, worker3:port],
+          chunk2: [...], ... }
           
     If there are not enough available workers, the foreman will only get
     charged for the workers assigned, and can make subsequent requests for
@@ -111,18 +112,12 @@ The REST API
     Workers use this to get the key to encrypt their chunk data. Returns 200 if
     the worker is in fact assigned to that chunk. If the address of the
     foreman associated with that chunk is not used to make this call, it
-    returns 403 (forbidden).
+    returns 403 (forbidden). 
+    
+    If
 
-### Developer API
-
-**These methods are provided for development purposes only and will probably be
-removed in future versions.**
-
-  - `GET /workers`
-    Returns the current set of workers.
-  
-  - `GET /workers/:addr`
-    Returns internal DB state relating to the requested worker.
+  - `GET /`
+    Returns info about the requester.
 
 
 Redis Schema
@@ -144,6 +139,8 @@ grab as many available workers as we need.
     clients:{addr} (hash)
         port: {p}
         credits: {c}
+        expiry: {t}
+        addr: {a}
         
 We keep a hash of every individual client by address, prefixed with "clients:".
 This way we can quickly get the port and credit count of a client.
@@ -165,16 +162,47 @@ Known vulnerabilities
 
   - Foreman can create lots of workers, and try to use those to get keys for
     the data that other people are actually computing on. This would require
-    creating a lot of clients with unique addresses
+    creating a lot of clients with unique addresses.
     
-  - Workers can just not do jobs. That would grind things to a halt pretty
-    quickly.
-  
+    
   - An attacker could just generate lots of clients and get lots of credits,
     then generate fake jobs to transfer credits to just one client, who could
     do lots of jobs.
-  
+    
+  - Workers can just not do jobs. That would grind things to a halt pretty
+    quickly. Similarly, foreman could just requests lots of chunks and get
+    refunds for them. [3]
  
+  
+  
+Notes
+-----
+
+1.  The discovery service _tries_ to return only available workers in the chunk
+    list, but may not do so. Workers are automatically removed from the pool
+    when a foreman requests them; however, clients may be multi-threaded and
+    want to accept multiple chunks at once. In this case, they can re-register
+    as soon as they are contacted by a foreman. However we recognize that
+    foreman can abuse this system by making requests for clients and not using
+    them. (See [3]) Alternatively, we could have left workers registered by
+    default; clients could unregister themselves as they become available by
+    changing their TTL to -1. In practice, we would have to test the service
+    with real users with both settings in order to see how the system responds.
+    
+2.  Although the client delegation is not thread-safe, all of the methods that
+    involve credits are. So foreman cannot cheat by trying to both validate a
+    chunk and invalidate it at the same time (in order to get both a refund and
+    the key). Also, foreman cannot try to get more workers than they're
+    permitted by trying to request chunks in quick succession.
+    
+3.  In a "live" system of this time, we would be actively collecting statistics
+    about who is creating jobs, not doing them, etc. in order to crack down on
+    abuse. This would make it easier to find cheaters who are repeatedly
+    preventing chunks from finishing, or foremen who are creating jobs but not
+    checking them. However, without real usage statistics, it is basically
+    impossible to develop these kinds of counter-measures.
+
+
 TODO
 ----
   
@@ -184,5 +212,4 @@ TODO
   
   - Proper key generation
   
-  - Figure out TTLs
   

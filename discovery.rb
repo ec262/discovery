@@ -79,11 +79,17 @@ get '/chunks/:id' do
   end
 end
 
-#########################################
-######## Development Methods ############
-#########################################
+# GET /
+# Returns info about the requester
 
 get '/' do
-  json get_client(request.ip)
+  addr = request.ip
+  
+  if client = get_client(addr)
+    json client
+  else
+    status 404
+    json :error => "Unknown client #{request.ip}"
+  end
 end
 
