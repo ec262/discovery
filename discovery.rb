@@ -11,18 +11,17 @@ require './config'
 
 post '/chunks' do
   foreman_addr = request.ip
-  workers = get_chunk_workers(params[:n], foreman_addr)
+  num_chunks_requested = params[:n].to_i
+  workers = get_chunk_workers(num_chunks_requested, foreman_addr)
   
   # Make sure foreman has enough credits
   if atomic_deduct_credits(workers.length, foreman_addr)
     # Number of chunks could be less than requested
-    make_chunks(workers.length / 3, foreman_addr).to_json
+    json make_chunks(workers.length / 3, foreman_addr, workers)
   else
     status 406
-    {
-      :credits_needed => workers.length,
-      :credits_available => get_client(foreman_addr)["credits"]
-    }.to_json
+    json  :credits_needed => workers.length,
+          :credits_available => get_client(foreman_addr)["credits"].to_i
   end
 end
 
@@ -39,10 +38,10 @@ delete '/chunks/:id' do
   valid = (params[:valid].to_i == 1)
   
   if result = atomic_delete_chunk(chunk_id, foreman_addr, valid)
-    result.to_json
+    json result
   else
     status 404
-    "Unknown chunk".to_json 
+    json :error => "Unknown chunk"
   end
 end
 
@@ -59,11 +58,11 @@ post '/workers' do
   port = params[:port] || DEFAULT_PORT
   ttl = params[:ttl] || DEFAULT_WORKER_TTL
       
-  if add_worker(addr, port, ttl)
-    "OK".to_json
+  if result = add_worker(addr, port, ttl)
+    json result
   else
     status 500
-    "Failed to add to workers pool :/".to_json
+    json :error => "Failed to add to workers pool"
   end
 end
 
@@ -76,16 +75,16 @@ get '/chunks/:id' do
   # Make sure chunk exists
   if chunk == {}
     status 404
-    return "Chunk expired or does not exist.".to_json
+    json :error => "Chunk expired or does not exist."
   end
   
   # Make sure worker permitted to access key
   unless chunk["workers"].split(',').index(request.ip)
     status 403
-    return "You do not have permission to get this key.".to_json
+    json :error => "You do not have permission to get this key."
   end
   
-  chunk["key"].to_json
+  json :key => chunk["key"]
 end
 
 #########################################
@@ -94,21 +93,26 @@ end
 
 get '/' do 
   status 404
-  request.ip.to_json
+  json :ip => request.ip
 end
 
 get '/workers' do  
-  get_all_workers.to_json
+  json get_all_workers
 end
 
 get '/workers/:addr' do
-  body worker = get_client(params[:addr]).to_json
-  status 404 if worker == {}
+  worker = get_client(params[:addr])
+  if worker == {}
+    status 404
+    json :error => "Unknown worker"
+  else
+    json worker
+  end
 end
 
 delete '/workers/?:addr?' do
   addr = params[:addr] || request.ip
   REDIS.zrem("workers", addr)
-  "OK".to_json # Return OK even if srem returns false (when there is no such member)
+  json :status => "OK" # Even if the worker didn't exist
 end
 

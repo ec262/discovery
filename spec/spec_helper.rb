@@ -8,17 +8,17 @@ RSpec.configure do |conf|
 end
 
 class Array
-  # A method to do set equality on arrays. If two arrays are the same, they have
-  # the same length and their intersection is the same length as the original
+  # Basic set equality on arrays. Just sort them and chek that they're the same
   def set_eq(s)
-    (self.size == s.size) && (self.size == (self & s).size)
+    self.sort == s.sort
   end
 end
 
 def generate_addrs(n)
-  Array.new(n).map do
+  addrs = Array.new(n).map do
     Array.new(4).map{rand(256)}.join('.')
   end
+  addrs << '127.0.0.1'
 end
 
 def seed_db_with_workers(addrs)

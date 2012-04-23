@@ -94,8 +94,9 @@ The REST API
     to his account and the number of available credits is returned. Note that
     this call is _idempotent_; calling it actually deletes the given chunk (to
     prevent cheating). If the address of the foreman associated with that chunk
-    is not used to make this call, it returns 403 (forbidden). Chunks expire
-    after 24h even if the delete method is not called.
+    is not used to make this call, or if the chunk does not exist, it returns
+    404 (forbidden) to prevent malicious behavior. Chunks expire after 24h even
+    if the delete method is not called.
           
 ### Worker API
 

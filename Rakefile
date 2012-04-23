@@ -18,3 +18,7 @@ task :seed do
     add_worker(addr, port, ttl)
   end
 end
+
+task :server do
+  sh "bundle exec shotgun --server=thin --port=5000 discovery.rb"
+end

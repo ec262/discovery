@@ -1,4 +1,5 @@
 require 'sinatra'
+require 'sinatra/json'
 require 'json'
 require 'set'
 
@@ -15,18 +16,17 @@ LOCK_MAX_ATTEMPTS = 100
 configure do
   # Set up Redis
   require 'redis'
+  require 'redis-lock'
   uri = URI.parse(ENV["REDISTOGO_URL"])
   REDIS = Redis.new(:host => uri.host, :port => uri.port, :password => uri.password)
 
-  # Use the system timer gem if running on Ruby 1.8
-  require 'system_timer' if RUBY_VERSION =~ /^1.8/
+  require 'system_timer' if RUBY_VERSION =~ /^1.8/ # Needed for ruby 1.8.x
+  
+  set :json_encoder, :to_json # not some other stupid encoder
 end
 
 configure :production, :development do
   REDIS.select(0) # Use default database
-end
-
-configure :development, :test do
 end
 
 configure :test do
