@@ -3,7 +3,7 @@ task :server do
 end
 
 task :console do
-  sh "bundle exec irb -r config.rb"
+  sh "bundle exec irb -r ./config.rb"
 end
 
 task :flushdb do
@@ -15,7 +15,7 @@ end
 task :seed, [:db, :worker_addr] do |t, args|
   require './config'
 
-  REDIS.select(args.db || 0)
+  REDIS.select(args.db.to_i || 0)
   REDIS.flushdb
 
   # Basic seeding of workers
@@ -44,7 +44,7 @@ task :test_remote do
     yield
   end
   
-  sh "heroku run rake seed[1,#{public_ip}]"
+  sh "heroku run rake seed[0,#{public_ip}]"
   call_remote do
     get '/chunks/1'
     post '/chunks?n=2'
