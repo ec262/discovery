@@ -1,4 +1,6 @@
 def add_worker(addr, port, ttl)
+  port ||= DEFAULT_PORT
+  ttl ||= DEFAULT_WORKER_TTL
   expiry = Time.now.to_i + ttl.to_i
 
   result = REDIS.multi do 

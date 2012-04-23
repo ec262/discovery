@@ -51,18 +51,18 @@ How the protocol works
 4.  The foreman is responsible for sending chunks to workers. Workers encrypt
     the data before sending it back to the foreman using a key assigned by the
     discovery service, which is generated for a particular chunk. If a worker
-    does not wish to participate in a job (or has simply gone offline), they
-    can simply not respond to the foreman.
+    does not wish to participate in a job (or has gone offline), they can
+    simply not respond to the foreman.
     
-5.  The foreman check that the encrypted data returned by at least two of the
+5.  The foreman checks that the encrypted data returned by at least two of the
     workers is valid. If so, the foreman requests the key to to decrypt the
-    data. If not, the foreman tells the discovery service and gets the credits
-    back for that chunk, but cannot encrypt the data returned by the workers.
-    If the chunk failed, the foreman can request more chunks from the discovery
-    service.
+    data and the workers receive credits. If not, the foreman tells the
+    discovery service and gets the credits back for that chunk, but cannot
+    decrypt the data returned by the workers. The foreman can always request
+    more chunks from the discovery service.
     
-6.  Clients can check on the status of a chunk by again requesting a key; if
-    the discovery service has no record of it then the client need not work on
+6.  Clients can check on the status of a chunk by re-requesting a key; if the
+    discovery service has no record of it then the client need not work on
     the chunk.
 
 
@@ -102,7 +102,7 @@ The REST API
           
 ### Worker API
 
-  - `POST /workers?addr=A&port=P&ttl=T`
+  - `POST /workers?port=P&ttl=T`
     Register a worker to the worker pool by address and port. If no address
     given, register the address of the requester. Default port is 2626. Workers
     can also specify a time to live in seconds; by default registrations last

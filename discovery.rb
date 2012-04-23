@@ -11,7 +11,7 @@ require './config'
 
 post '/chunks' do
   foreman_addr = request.ip
-  num_chunks_requested = params[:n].to_i
+  num_chunks_requested = (params[:n] || 1).to_i
   workers = get_chunk_workers(foreman_addr, num_chunks_requested)
   
   if chunks = make_chunks(foreman_addr, workers)
@@ -48,13 +48,13 @@ end
 ########### Worker Methods ##############
 #########################################
 
-# POST /workers?addr=A&port=P&ttl=T
+# POST /workers?port=P&ttl=T
 # Register as a worker
 
 post '/workers' do
-  addr = params[:addr] || request.ip
-  port = params[:port] || DEFAULT_PORT
-  ttl = params[:ttl] || DEFAULT_WORKER_TTL
+  addr = request.ip
+  port = params[:port]
+  ttl = params[:ttl]
       
   if worker = add_worker(addr, port, ttl)
     json worker

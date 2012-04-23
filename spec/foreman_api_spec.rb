@@ -18,8 +18,17 @@ describe 'Foreman API' do
     post '/chunks?n=2'
     last_response.should be_ok
     response = JSON.parse(last_response.body)
-
     response.keys.length.should == 2
+    response.each_value.each do |workers|
+      workers.length.should == 3
+    end
+  end
+  
+  it "lets you request just one chunk" do
+    post '/chunks'
+    last_response.should be_ok
+    response = JSON.parse(last_response.body)
+    response.keys.length.should == 1
     response.each_value.each do |workers|
       workers.length.should == 3
     end
@@ -81,14 +90,12 @@ describe 'Foreman API' do
         addr, port = worker_pair.split(":")
         worker_credits[addr] = get_client(addr)["credits"].to_i
       end
-      # puts worker_credits.inspect
       delete "/chunks/#{chunk_id}?valid=1"
       last_response.should be_ok
       response = JSON.parse(last_response.body)
       response["key"].should == actual_key
       get_client("127.0.0.1")["credits"].to_i.should == 0
       worker_credits.each_pair do |addr, credits|
-        # puts addr, get_client(addr)["credits"].to_i
         (credits + 1).should == get_client(addr)["credits"].to_i
       end
     end

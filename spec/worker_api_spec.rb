@@ -14,20 +14,25 @@ describe 'Worker API' do
     seed_db_with_workers(addrs)
   end
   
-  it "adds workers to the set" do
+  it "allows you to register" do
+    REDIS.flushdb
+    post "/workers"
     last_response.should be_ok
+    worker = JSON.parse(last_response.body)
+    worker["addr"].should == "127.0.0.1"
   end
   
   it "adds correct default TTLs and ports" do
     worker = get_client(addrs.last)
     worker["expiry"].to_i.should == Time.now.to_i + DEFAULT_WORKER_TTL
-    worker["port"].to_i.should == 2626
+    worker["port"].to_i.should == DEFAULT_PORT
   end
   
   it "adds/updates correct TTLs and ports" do
+    REDIS.flushdb
     t = Time.now.to_i
-    post "/workers", params={:addr=>"jon-levine.com", :ttl=>20, :port=>8302}
-    worker = get_client("jon-levine.com")
+    post "/workers", params={:ttl=>20, :port=>8302}
+    worker = get_client("127.0.0.1")
     worker["expiry"].to_i.should == t + 20
     worker["port"].to_i.should == 8302
   end

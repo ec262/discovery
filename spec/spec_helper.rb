@@ -17,6 +17,6 @@ end
 def seed_db_with_workers(addrs)
   post "/workers"
   addrs.each do |addr|
-    post "/workers", params={:addr=>addr}
+    add_worker(addr, nil, nil)
   end
 end
