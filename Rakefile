@@ -22,47 +22,49 @@ task :seed, [:db, :worker_addr] do |t, args|
   # Create a chunk with a given worker
   chunk_workers = addrs.take(2).push(args.worker_addr || "127.0.0.1")
   chunks = make_chunks(addrs.last, chunk_workers)
-  puts chunks.inspect
+  puts "Created chunks " + chunks.inspect
 end
 
 def get_public_ip
   require 'socket'
-  puts UDPSocket.open {|s| s.connect('64.233.187.99', 1); s.addr.last }
+  UDPSocket.open {|s| s.connect('64.233.187.99', 1); s.addr.last }
 end
 
-def hash_to_url_params(h)
-  str = "?"
-  hash.each_pair do |k, v|
-    str.append("#{k}=#{v}&")
+
+def call_remote  
+  def hash_to_url_params(h)
+    str = ""
+    h.each_pair do |k, v|
+      str += "#{k}=#{v}&"
+    end
+    str.chop
   end
-  str.chop
-end
 
-def get(path, remote="http://ec262discovery.herokuapp.com/")
-  require 'net/http'
-  puts "GET #{remote + path + hash_to_url_params(params)} "
-  puts Net::HTTP.get(URI(remote + path))
+  def curl(method, path, params=nil, host="http://ec262discovery.herokuapp.com")
+    command = "curl -X #{method.to_s.upcase} #{host + path}"
+    command += " -d #{hash_to_url_params(params)}" if params
+    sh command
+    puts
+  end
+  
+  def method_missing(*args)
+    if [:get, :post, :delete].index(args[0])
+      puts
+      curl(*args)
+    end
+  end
+  
+  yield
 end
-
-def post(path, params, remote="http://ec262.herokuapp.com/")
-  require 'net/http'
-  puts "POST #{remote + path} #{remote + path + hash_to_url_params(params)} "
-  Net::HTTP.post_form(URI(remote + path), params)
-end
-
-def delete(path, remote="http://ec262.herokuapp.com/")
-  require 'net/http'
-  puts "DELETE #{remote + path} #{remote + path} "
-  Net::HTTP.delete(URI(remote + path))
-end
-
 
 task :test_remote do |t, args|
     sh "heroku run rake seed[0,#{get_public_ip}]"
-    get "/chunks/1"
-    post "/chunks", :n => 2 
-    get "/"
-    delete "/chunks/2?valid=1"
+    call_remote do
+      get '/chunks/1'
+      post '/chunks', :n => 2
+      get '/'
+      delete '/chunks/2?valid=1'
+    end
 end
 
 task :server do
