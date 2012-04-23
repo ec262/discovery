@@ -21,3 +21,16 @@ def get_client(addr)
   client = REDIS.hgetall("clients:#{addr}")
   return client if client != {}
 end
+
+def generate_addrs(n)
+  addrs = Array.new(n).map do
+    Array.new(4).map{rand(256)}.join('.')
+  end
+  addrs << '127.0.0.1'
+end
+
+def seed_db_with_workers(addrs)
+  addrs.each do |addr|
+    add_worker(addr, nil, nil)
+  end
+end

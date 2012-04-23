@@ -229,7 +229,8 @@ Notes
 
 TODO
 ----
-
+  - Remote tests!! Make sure Heroku works
+  
   - Even more testing!
   
   - Proper key generation

@@ -153,8 +153,8 @@ describe 'Foreman API' do
   end
   
   it "doesn't let you delete chunks that aren't yours" do
-    make_chunks("255.255.255.255", addrs)
-    chunks = JSON.parse(last_response.body)
+    foreman = addrs.shift
+    chunks = make_chunks(foreman, addrs)
     chunks.each_pair do |chunk_id, workers|
       delete "/chunks/#{chunk_id}"
       last_response.status.should == 404
