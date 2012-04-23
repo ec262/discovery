@@ -92,7 +92,7 @@ The REST API
   - `DELETE /chunks/:id?(valid=1)`
     Tell the discovery server that a chunk computation is valid or has failed.
     If the computation is valid, then the foreman gets a JSON object containing
-    the key associated with the chunk, e.g.: 
+    the key associated with the chunk, e.g.
     
         { "key": "8238539950397531954578546" }
         
@@ -229,10 +229,8 @@ Notes
 
 TODO
 ----
-  
-  - IP vs. host? 
-    
-  - Test test test, including failure cases
+
+  - Even more testing!
   
   - Proper key generation
   
