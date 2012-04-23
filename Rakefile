@@ -31,18 +31,9 @@ def get_public_ip
 end
 
 
-def call_remote  
-  def hash_to_url_params(h)
-    str = ""
-    h.each_pair do |k, v|
-      str += "#{k}=#{v}&"
-    end
-    str.chop
-  end
-
-  def curl(method, path, params=nil, host="http://ec262discovery.herokuapp.com")
-    command = "curl -X #{method.to_s.upcase} #{host + path}"
-    command += " -d #{hash_to_url_params(params)}" if params
+def call_remote
+  def curl(method, path)
+    command = "curl -X #{method.to_s.upcase} http://ec262discovery.herokuapp.com#{path}"
     sh command
     puts
   end
@@ -57,11 +48,11 @@ def call_remote
   yield
 end
 
-task :test_remote do |t, args|
+task :test_remote do
   sh "heroku run rake seed[0,#{get_public_ip}]"
   call_remote do
     get '/chunks/1'
-    post '/chunks', :n => 2
+    post '/chunks?n=2'
     get '/'
     delete '/chunks/2?valid=1'
   end
