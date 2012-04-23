@@ -1,3 +1,7 @@
+task :server do
+  sh "bundle exec shotgun --server=thin --port=5000 discovery.rb"
+end
+
 task :console do
   sh "bundle exec irb -r config.rb"
 end
@@ -25,25 +29,22 @@ task :seed, [:db, :worker_addr] do |t, args|
   puts "Created chunks " + chunks.inspect
 end
 
-def get_public_ip
+task :test_remote do
   require 'socket'
-  UDPSocket.open {|s| s.connect('64.233.187.99', 1); s.addr.last }
-end
-
-
-def call_remote  
-  def method_missing(*args)
-    method, path = args
-    if [:get, :post, :delete].index(method)
-      sh "\ncurl -w '\\n' -X #{method.to_s.upcase} http://ec262discovery.herokuapp.com#{path}"
+  public_ip = UDPSocket.open {|s| s.connect('64.233.187.99', 1); s.addr.last }
+  
+  def call_remote  
+    def method_missing(*args)
+      method, path = args
+      if [:get, :post, :delete].index(method)
+        sh "\ncurl -w '\\n' -X #{method.to_s.upcase} http://ec262discovery.herokuapp.com#{path}"
+      end
     end
+
+    yield
   end
   
-  yield
-end
-
-task :test_remote do
-  sh "heroku run rake seed[0,#{get_public_ip}]"
+  sh "heroku run rake seed[1,#{public_ip}]"
   call_remote do
     get '/chunks/1'
     post '/chunks?n=2'
@@ -52,10 +53,3 @@ task :test_remote do
   end
 end
 
-task :server do
-  sh "bundle exec shotgun --server=thin --port=5000 discovery.rb"
-end
-
-task :test do
-  sh "rspec"
-end
