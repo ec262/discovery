@@ -115,6 +115,7 @@ describe 'Foreman API' do
       last_response.should be_ok
       response = JSON.parse(last_response.body)
       response["key"].should be_nil
+      response["credits"].should be_a(Fixnum)
       worker_credits.each_pair do |addr, credits|
         credits.should == get_client(addr)["credits"].to_i
       end
