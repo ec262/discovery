@@ -7,16 +7,15 @@ require './config'
 
 # POST /chunks?n=num_chunks
 # Pay for a list of chunks and their associated workers; returns at most
-# num_chunks chunks (could be less)
+# num_chunks chunks (possibly less)
 
 post '/chunks' do
   foreman_addr = request.ip
   num_chunks_requested = params[:n].to_i
   workers = get_chunk_workers(foreman_addr, num_chunks_requested)
   
-  # Make sure foreman has enough credits
-  if atomic_deduct_credits(foreman_addr, workers.length)
-    json make_chunks(foreman_addr, workers)
+  if chunks = make_chunks(foreman_addr, workers)
+    json chunks
   else
     status 406
     json  :credits_needed => workers.length,
@@ -57,8 +56,8 @@ post '/workers' do
   port = params[:port] || DEFAULT_PORT
   ttl = params[:ttl] || DEFAULT_WORKER_TTL
       
-  if result = add_worker(addr, port, ttl)
-    json result
+  if worker = add_worker(addr, port, ttl)
+    json worker
   else
     status 500
     json :error => "Failed to add to workers pool"

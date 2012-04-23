@@ -27,7 +27,7 @@ end
 # Threadsafe way to check if foreman has enough credits, and deduct if sufficient
 def atomic_deduct_credits(foreman_addr, needed_credits)
   result = nil
-  REDIS.lock(foreman_addr, LOCK_TIMEOUT, LOCK_MAX_ATTEMPTS)
+  REDIS.lock("clients:#{foreman_addr}", LOCK_TIMEOUT, LOCK_MAX_ATTEMPTS)
   
   # Give the foreman credits if it hasn't registered before
   REDIS.hsetnx("clients:#{foreman_addr}", "credits", NUM_STARTING_CREDITS)
@@ -37,12 +37,15 @@ def atomic_deduct_credits(foreman_addr, needed_credits)
     result = REDIS.hincrby("clients:#{foreman_addr}", "credits",  -needed_credits)
   end
                
-  REDIS.unlock(foreman_addr)
+  REDIS.unlock("clients:#{foreman_addr}")
   return result
 end
 
 # Assign workers to chunks and generate keys
 def make_chunks(foreman_addr, workers)
+  # First deduct credits from foreman; fail if insufficient credits
+  return nil unless atomic_deduct_credits(foreman_addr, workers.length)
+
   chunks = {}
   num_chunks = workers.length / 3
   num_chunks.times do
@@ -55,7 +58,7 @@ def make_chunks(foreman_addr, workers)
     REDIS.expire("chunks:#{chunk_id}", DEFAULT_CHUNK_TTL)
     chunks[chunk_id] = chunk_workers.map{ |w| w + ':' + REDIS.hget("clients:#{w}", "port") } # Append workers' ports to address
   end
-  chunks
+  return chunks
 end
 
 # Threadsafe way of doing chunk deletion. Prevents foreman from trying to both
