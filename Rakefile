@@ -31,17 +31,11 @@ def get_public_ip
 end
 
 
-def call_remote
-  def curl(method, path)
-    command = "curl -X #{method.to_s.upcase} http://ec262discovery.herokuapp.com#{path}"
-    sh command
-    puts
-  end
-  
+def call_remote  
   def method_missing(*args)
-    if [:get, :post, :delete].index(args[0])
-      puts
-      curl(*args)
+    method, path = args
+    if [:get, :post, :delete].index(method)
+      sh "\ncurl -w '\\n' -X #{method.to_s.upcase} http://ec262discovery.herokuapp.com#{path}"
     end
   end
   
