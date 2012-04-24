@@ -3,7 +3,8 @@ def get_chunk(chunk_id)
 end
 
 def generate_chunk_key
-  rand(1e25).to_s
+  require 'openssl'
+  OpenSSL::Cipher.new("aes-128-ecb").random_key
 end
 
 def get_chunk_key(chunk_id, client_addr)
