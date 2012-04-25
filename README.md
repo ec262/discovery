@@ -145,7 +145,7 @@ The REST API
     Workers use this to get the key to encrypt their chunk data. If permitted,
     it returns a JSON object with the requested key, e.g.
     
-        { "key": "8238539950397531954578546" }
+        {"key":"Ji8W2byt1Xp83F7K/gKvWg=="}
         
     If the chunk does not exist, or the address of the requester is not one of
     the assigned workers, it returns 404.
