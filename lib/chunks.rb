@@ -6,7 +6,8 @@ end
 # Generates a (theoretically) secure key for AES-128 encryption. 
 def generate_chunk_key
   require 'openssl'
-  OpenSSL::Cipher.new("aes-128-ecb").random_key
+  require 'base64'
+  Base64.encode64(OpenSSL::Cipher.new("aes-128-ecb").random_key)
 end
 
 # Returns the key for a chunk if the client is permitted to see it; otherwise
