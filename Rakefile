@@ -34,12 +34,12 @@ task :seed, [:db, :worker_addr] do |t, args|
 end
 
 namespace :test do
-  desc "Runs local tests"
+  desc "Runs full local test suite"
   task :local do
     sh 'bundle exec rspec'
   end
   
-  desc "Runs tests on Heroku"
+  desc "Runs some basic tests to make sure Heroku is working"
   task :remote do
     require 'socket'
     public_ip = UDPSocket.open {|s| s.connect('64.233.187.99', 1); s.addr.last }

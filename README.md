@@ -239,12 +239,11 @@ Notes
     the key). Also, foreman cannot try to get more workers than they're
     permitted by trying to request chunks in quick succession.
     
-3.  In a "live" system of this time, we would be actively collecting statistics
-    about who is creating jobs, not doing them, etc. in order to crack down on
-    abuse. This would make it easier to find cheaters who are repeatedly
-    preventing chunks from finishing, or foremen who are creating jobs but not
-    checking them. However, without real usage statistics, it is basically
-    impossible to develop these kinds of counter-measures.
+3.  In a "live" system, we would be actively collecting statistics about who is
+    creating jobs, not doing them, etc. We could then develop heuristics to
+    find cheaters who are repeatedly preventing chunks or foremen who are
+    creating jobs but not checking them. However, without real usage data, it
+    is basically impossible to develop these kinds of counter-measures.
 
 
 TODO
