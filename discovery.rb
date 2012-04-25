@@ -1,6 +1,7 @@
 require 'sinatra'
 require './config'
 
+require 'sinatra/json'
 
 #########################################
 ########### Foreman Methods #############
@@ -12,7 +13,7 @@ require './config'
 post '/chunks' do
   foreman_addr = request.ip
   num_chunks_requested = (params[:n] || 1).to_i  
-  make_chunks(foreman_addr, num_chunks_requested)  
+  json make_chunks(foreman_addr, num_chunks_requested)  
 end
 
 
@@ -25,7 +26,7 @@ delete '/chunks/:id' do
   foreman_addr = request.ip
   chunk_id = params[:id]
   valid = (params[:valid] == '1')
-  atomic_delete_chunk(chunk_id, foreman_addr, valid)
+  json atomic_delete_chunk(chunk_id, foreman_addr, valid)
 end
 
 
@@ -39,7 +40,7 @@ post '/workers' do
   addr = request.ip
   port = params[:port]
   ttl = params[:ttl]
-  add_worker(addr, port, ttl)
+  json add_worker(addr, port, ttl)
 end
 
 # GET /chunks/:id
@@ -47,13 +48,13 @@ end
 get '/chunks/:id' do
   client_addr = request.ip
   chunk_id = params[:id]
-  get_chunk_key(chunk_id, client_addr)
+  json get_chunk_key(chunk_id, client_addr)
 end
 
 # GET /
 # Returns info about the requester
 get '/' do
-  get_client(request.ip)
+  json get_client(request.ip)
 end
 
 ####################################### 
