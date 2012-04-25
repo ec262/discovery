@@ -15,4 +15,3 @@ class JSONResponder
     [status, headers, json_response]
   end
 end
-

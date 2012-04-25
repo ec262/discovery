@@ -25,6 +25,27 @@ let me know what doesn't work.)
 2.  `export REDISTOGO_URL='redis://127.0.0.1:6379'`
     This lets you run Redis locally without fuss. Assumes your Redis server is
     set up to run on 6379, which is the default on Mac OS at least.
+    
+    
+What's in this repo
+-------------------
+
+    |-- config.rb               : Configuration code
+    |-- discovery.rb            : Application route logic (the web front-end)
+    |-- Gemfile                 : Specifies dependencies
+    |-- Gemfile.lock            : Complied dependency file (do not edit)
+    |-- lib/
+    |   |-- chunks.rb           : Application logic related to chunks
+    |   |-- exceptions.rb       : Exception definitions (status codes, error messages...)
+    |   |-- json_responder.rb   : Rack middleware to turns every response into JSON
+    |   `-- worker.rb           : Application code realing to dealing with workers
+    |-- Procfile                : Tell Heroku how to run the app
+    |-- Rakefile                : Some helpful scripts; run `rake -T` to see what they all do
+    |-- README.md               : This file
+    `-- spec/
+        |-- foreman_api_spec.rb : Tests the Foreman API
+        |-- spec_helper.rb      : Setup for the test code 
+        `-- worker_api_spec.rb  : Tests the Worker API
 
 
 How the protocol works

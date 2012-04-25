@@ -1,17 +1,21 @@
+desc "Run a server with shotgun (automatically restarts when you save a new file)"
 task :server do
   sh "bundle exec shotgun --server=thin --port=5000 discovery.rb"
 end
 
+desc "Starts an irb session with a loaded environment"
 task :console do
   sh "bundle exec irb -r ./config.rb"
 end
 
+desc "Clears the database"
 task :flushdb do
   require './config'
   REDIS.select(0)
   REDIS.flushdb
 end
 
+desc "Seeds the database; takes optional paramters for which database and a worker address to add"
 task :seed, [:db, :worker_addr] do |t, args|
   require './config'
 
@@ -30,10 +34,12 @@ task :seed, [:db, :worker_addr] do |t, args|
 end
 
 namespace :test do
+  desc "Runs local tests"
   task :local do
     sh 'bundle exec rspec'
   end
   
+  desc "Runs tests on Heroku"
   task :remote do
     require 'socket'
     public_ip = UDPSocket.open {|s| s.connect('64.233.187.99', 1); s.addr.last }
