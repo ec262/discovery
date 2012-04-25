@@ -36,11 +36,11 @@ What's in this repo
     |-- Gemfile.lock            : Complied dependency file (do not edit)
     |-- lib/
     |   |-- chunks.rb           : Application logic related to chunks
-    |   |-- exceptions.rb       : Exception definitions (status codes, error messages...)
-    |   |-- json_responder.rb   : Rack middleware to turns every response into JSON
-    |   `-- worker.rb           : Application code realing to dealing with workers
+    |   |-- exceptions.rb       : Exception definitions (incl. HTTP responses)
+    |   |-- json_responder.rb   : Rack middleware; makes every response JSON
+    |   `-- worker.rb           : Application code related to workers
     |-- Procfile                : Tell Heroku how to run the app
-    |-- Rakefile                : Some helpful scripts; run `rake -T` to see what they all do
+    |-- Rakefile                : Helpful tasks; run `rake -T` to see them all
     |-- README.md               : This file
     `-- spec/
         |-- foreman_api_spec.rb : Tests the Foreman API
@@ -217,7 +217,6 @@ Known vulnerabilities
   - Workers can just not do jobs. That would grind things to a halt pretty
     quickly. Similarly, foreman could just requests lots of chunks and get
     refunds for them. [3]
- 
   
   
 Notes
@@ -251,7 +250,3 @@ Notes
 TODO
 ----
   - Even more testing!
-  
-  - Proper key generation
-  
-  
