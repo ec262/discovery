@@ -64,7 +64,7 @@ How the protocol works
     chunks, they will pay with 3_n_ credits. (If a foreman has never acted as
     a worker, they will start with 12 credits.) The discovery service responds
     with a list of chunks and the workers assigned to them. The discovery
-    service tries to respond with chunks that are available, but does not
+    service tries to respond with workers that are available, but does not
     guarantee it. [1]
 
 3.  By default, workers are single threaded; thus, they will be removed from
@@ -72,18 +72,18 @@ How the protocol works
     accept more chunks (or if they simply don't plan on computing the one
     they're given), they can re-register with the discovery service.
 
-4.  The foreman is responsible for sending chunks to workers. Workers encrypt
-    the data before sending it back to the foreman using a key assigned by the
-    discovery service, which is generated for a particular chunk. If a worker
-    does not wish to participate in a job (or has gone offline), they can
-    simply not respond to the foreman.
+4.  The foreman is responsible for sending chunks to workers. Before returning
+    their data to the foreman, workers encrypt the results with AES-128 and a
+    key assigned by the discovery service. Keys are unique to each chunk. If a
+    worker does not wish to participate in a job (or has gone offline), they
+    can simply not respond or send garbage back to the foreman.
     
 5.  The foreman checks that the encrypted data returned by at least two of the
-    workers is valid. If so, the foreman requests the key to to decrypt the
-    data and the workers receive credits. If not, the foreman tells the
-    discovery service and gets the credits back for that chunk, but cannot
-    decrypt the data returned by the workers. The foreman can always request
-    more chunks from the discovery service.
+    workers is valid. If so, the foreman requests the key to decrypt the data
+    and the workers receive credits. If not, the foreman tells the discovery
+    service and gets the credits back for that chunk, but cannot decrypt the
+    data returned by the workers. The foreman can always request more chunks
+    from the discovery service.
     
 6.  Clients can check on the status of a chunk by re-requesting a key; if the
     discovery service has no record of it then the client need not work on
