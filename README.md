@@ -118,7 +118,7 @@ The REST API
     If the computation is valid, then the foreman gets a JSON object containing
     the key associated with the chunk, e.g.
     
-        {"key":"8238539950397531954578546"}
+        {"key":"Ji8W2byt1Xp83F7K/gKvWg=="}
         
     If the computation failed, the foreman gets 3 credits returned to his
     account and the number of available credits is returned, e.g.
