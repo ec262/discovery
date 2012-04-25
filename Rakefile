@@ -25,7 +25,7 @@ task :seed, [:db, :worker_addr] do |t, args|
   # Basic seeding of workers
   addrs = generate_addrs(20)
   seed_db_with_workers(addrs)
-  add_worker(args.worker_addr, nil, nil)
+  add_worker(args.worker_addr)
 
   # Create a chunk with a given worker
   chunk_workers = addrs.take(2).push(args.worker_addr || "127.0.0.1")
