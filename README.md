@@ -8,19 +8,21 @@ credits. Workers register with the service to get assigned jobs and earn
 credits for doing work. Foremen request available workers to compute chunks
 and pay for the results.
 
-The service is written in Ruby with Sinatra, backed by Redis, and hosted on
-Heroku.
-
 
 Get up and running locally
 --------------------------
 
-You'll want to run some or all of these commands. (I'm sure I'm missing some, so
-let me know what doesn't work.)
+The discovery service is written in Ruby 1.9.2 with the Sinatra web framework,
+Redis as a datastore, and deployed on Heroku. It is recommended that you use
+[RVM](http://beginrescueend.com/) to manage your Ruby installations.
+
+Once you have Ruby and Redis installed, you'll probably need to run these
+commands. (I'm sure I'm missing some, so let me know what doesn't work.)
 
 1.  `bundle install`
-    This installs all the required gems; you'll need to `gem install bundle`
-    first if you have not yet done so.
+    This installs the required dependencies. You'll need to install bundler
+    first by running `gem install bundle` if you have not yet done so. It is
+    also recommended that you install the Rake, Foreman, and Heroku gems.
 
 2.  `export REDISTOGO_URL='redis://127.0.0.1:6379'`
     This lets you run Redis locally without fuss. Assumes your Redis server is
@@ -202,6 +204,31 @@ debited. Chunks need to be locked when foreman request their deletion. We
 use the `redis-lock` library to manage these locks.
 
     
+Design decisions
+----------------
+
+We chose to build on the web stack using Ruby and Sinatra mostly for simplicity
+and familiarity. Because nothing in the discovery service is performance
+critical, it is feasible to use HTTP. HTTP makes it simple to deploy to a PaaS
+like Heroku which presumably has better uptime than any machine we would
+administer ourselves. Also, it makes it easy for components written in
+different languages (Ruby, Python, and possibly others) to communicate. 
+
+Redis is useful both because it is very fast (all data is stored in memory) and
+because its semantics map very well onto our discovery service. If we were to 
+scale this system, Redis makes it relatively simple to set up an independent
+master-slave repositories. We could set up multiple front-ends to process 
+requests, and all race conditions can be handled by using transactions and
+locks in Redis. 
+
+The protocol itself is designed to minimize communication with the discovery
+service, and to keep clients from needing to write their own servers that
+accept incoming requests from the service. Instead, clients only need to listen
+to incoming requests from other clients. We ensure safety in the sense that
+foreman only pay (and workers will only get paid) when chunks are fully valid,
+though there are risks to liveness which are discussed in the next section. 
+
+
 Known vulnerabilities
 ---------------------
 
@@ -209,14 +236,13 @@ Known vulnerabilities
     the data that other people are actually computing on. This would require
     creating a lot of clients with unique addresses.
     
-    
   - An attacker could just generate lots of clients and get lots of credits,
     then generate fake jobs to transfer credits to just one client, who could
     do lots of jobs.
     
-  - Workers can just not do jobs. That would grind things to a halt pretty
-    quickly. Similarly, foreman could just requests lots of chunks and get
-    refunds for them. [3]
+  - Workers can just not compute chunks. That would grind things to a halt
+    pretty quickly. Similarly, foreman could just requests lots of chunks and
+    get refunds for them. [3]
   
   
 Notes
@@ -241,12 +267,12 @@ Notes
     
 3.  In a "live" system, we would be actively collecting statistics about who is
     creating jobs, not doing them, etc. We could then develop heuristics to
-    find cheaters who are repeatedly preventing chunks or foremen who are
+    find cheaters who are repeatedly not computing chunks or foremen who are
     creating jobs but not checking them. However, without real usage data, it
     is basically impossible to develop these kinds of counter-measures.
 
 
 TODO
 ----
-  - Even more testing!
+  - You can never have too many tests...
   
