@@ -8,8 +8,6 @@ gem 'redis-lock'
 gem 'rspec'
 gem 'rack-test'
 
-gem 'sinatra-contrib'
-
 group :development, :test do
   gem 'shotgun'
 end
