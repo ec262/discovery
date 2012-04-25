@@ -76,6 +76,7 @@ def make_chunks(foreman_addr, num_chunks_requested, workers=nil)
     REDIS.hmset("chunks:#{chunk_id}", "foreman", foreman_addr,
                                       "workers", chunk_workers.join(','),
                                       "key", chunk_key)
+    # Set an expiration on chunks so they don't pollute Redis
     REDIS.expire("chunks:#{chunk_id}", DEFAULT_CHUNK_TTL)
     chunks[chunk_id] = chunk_workers.map{ |w| w + ':' + REDIS.hget("clients:#{w}", "port") } # Append workers' ports to address
   end

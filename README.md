@@ -116,7 +116,7 @@ The REST API
   - `DELETE /chunks/:id?(valid=1)`
     Tell the discovery server that a chunk computation is valid or has failed.
     If the computation is valid, then the foreman gets a JSON object containing
-    the key associated with the chunk, e.g.
+    the Base64-encoded key associated with the chunk, e.g.
     
         {"key":"Ji8W2byt1Xp83F7K/gKvWg=="}
         
@@ -143,7 +143,7 @@ The REST API
     
   - `GET /chunks/:id`
     Workers use this to get the key to encrypt their chunk data. If permitted,
-    it returns a JSON object with the requested key, e.g.
+    it returns a JSON object with the requested key, encoded with Base64, e.g.
     
         {"key":"Ji8W2byt1Xp83F7K/gKvWg=="}
         
