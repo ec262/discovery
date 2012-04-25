@@ -60,6 +60,7 @@ end
 get '/' do
   # json get_client(request.ip)
   get_client(request.ip)
+  # "this".each
 end
 
 ####################################### 

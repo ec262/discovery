@@ -58,3 +58,14 @@ end
 
 use JSONResponder
 
+#### Hacky backtrace
+class String
+  def each
+    puts "String#each:"
+    caller.each do |line|
+      puts "  #{line}"
+    end
+    raise
+  end
+end
+
