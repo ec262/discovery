@@ -20,7 +20,7 @@ describe 'Foreman API' do
     response = JSON.parse(last_response.body)
     response.keys.length.should == 2
     response.each_value.each do |workers|
-      workers.length.should == 3
+      workers.length.should == WORKERS_PER_CHUNK
     end
   end
   
@@ -30,7 +30,7 @@ describe 'Foreman API' do
     response = JSON.parse(last_response.body)
     response.keys.length.should == 1
     response.each_value.each do |workers|
-      workers.length.should == 3
+      workers.length.should == WORKERS_PER_CHUNK
     end
   end
   
@@ -46,7 +46,7 @@ describe 'Foreman API' do
   it "removes credits from your account for requesting chunks" do
     post '/chunks?n=2'
     foreman = get_client("127.0.0.1")
-    foreman["credits"].to_i.should == 6
+    foreman["credits"].to_i.should == NUM_STARTING_CREDITS - 2 * WORKERS_PER_CHUNK
   end
   
   it "lets you spend all your credits" do
@@ -154,7 +154,7 @@ describe 'Foreman API' do
   
   it "doesn't let you delete chunks that aren't yours" do
     foreman = addrs.shift
-    chunks = make_chunks(foreman, addrs)
+    chunks = make_chunks(foreman, addrs.length / WORKERS_PER_CHUNK, addrs)
     chunks.each_pair do |chunk_id, workers|
       delete "/chunks/#{chunk_id}"
       last_response.status.should == 404

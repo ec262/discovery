@@ -69,7 +69,7 @@ describe 'Worker API' do
   
   it "returns a key if you're assigned to a chunk" do
     workers = addrs.take(2).push("127.0.0.1")
-    chunks = make_chunks("1.2.3.4", workers)
+    chunks = make_chunks("1.2.3.4", 1, workers)
     chunk_id = chunks.keys.first
     get "/chunks/#{chunk_id}"
     last_response.should be_ok
@@ -78,10 +78,10 @@ describe 'Worker API' do
   end
   
   it "doesn't return a key if you're not assigned to a chunk" do
-    workers = addrs.take(3)
+    workers = addrs.take(WORKERS_PER_CHUNK)
     workers.delete("127.0.0.1") # Make sure localhost isn't in workers
-    workers.length.should == 3
-    chunks = make_chunks("1.2.3.4", workers)
+    workers.length.should == WORKERS_PER_CHUNK
+    chunks = make_chunks("1.2.3.4", 1, workers)
     chunk_id = chunks.keys.first
     get "/chunks/#{chunk_id}"
     last_response.status.should == 404

@@ -19,7 +19,11 @@ end
 
 def get_client(addr)
   client = REDIS.hgetall("clients:#{addr}")
-  return client if client != {}
+  if client != {}
+    client
+  else
+    raise UnknownClient
+  end
 end
 
 def generate_addrs(n)

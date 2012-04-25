@@ -25,7 +25,7 @@ task :seed, [:db, :worker_addr] do |t, args|
 
   # Create a chunk with a given worker
   chunk_workers = addrs.take(2).push(args.worker_addr || "127.0.0.1")
-  chunks = make_chunks(addrs.last, chunk_workers)
+  chunks = make_chunks(addrs.last, 1, chunk_workers)
   puts "Created chunks " + chunks.inspect
 end
 
