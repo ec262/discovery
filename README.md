@@ -12,9 +12,11 @@ and pay for the results.
 Get up and running locally
 --------------------------
 
-The discovery service is written in Ruby 1.9.2 with the Sinatra web framework,
-Redis as a datastore, and deployed on Heroku. It is recommended that you use
-[RVM](http://beginrescueend.com/) to manage your Ruby installations.
+The discovery service is written in [Ruby](http://www.ruby-lang.org/)
+using the [Sinatra](http://www.sinatrarb.com/) web framework,
+[Redis](http://redis.io/) as a datastore, and deployed on Heroku. Ruby 1.9.2
+is required; it is recommended that you use [RVM](http://beginrescueend.com/)
+to manage your Ruby installations.
 
 Once you have Ruby and Redis installed, you'll probably need to run these
 commands. (I'm sure I'm missing some, so let me know what doesn't work.)
