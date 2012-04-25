@@ -64,5 +64,5 @@ end
 error DiscoveryServiceException do
   exception = env['sinatra.error']
   status exception.code
-  body exception.response
+  json exception.response
 end

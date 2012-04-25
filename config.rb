@@ -21,9 +21,6 @@ configure do
   uri = URI.parse(ENV["REDISTOGO_URL"])
   REDIS = Redis.new(:host => uri.host, :port => uri.port, :password => uri.password)
 
-  # Needed for ruby 1.8.x compatibility
-  require 'system_timer' if RUBY_VERSION =~ /^1.8/
-  
   # Encode JSON correctly
   set :json_encoder, :to_json 
   

@@ -11,6 +11,5 @@ gem 'rack-test'
 gem 'sinatra-contrib'
 
 group :development, :test do
-  gem 'SystemTimer'
   gem 'shotgun'
 end
