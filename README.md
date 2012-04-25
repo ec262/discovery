@@ -105,8 +105,8 @@ The REST API
     object with keys corresponding to chunk IDs, and each key containing an
     array of the three workers that are assigned to that chunk, e.g.
 
-        { "1": ["worker1:port", "worker2:port", "worker3:port"],
-          "2": ["worker4:port", ...], ... }
+        {"1":["worker1:port","worker2:port","worker3:port"],
+         "2":["worker4:port", ... ], ... }
           
     If there are not enough available workers, the foreman will only get
     charged for the workers assigned, and can make subsequent requests for
@@ -118,12 +118,12 @@ The REST API
     If the computation is valid, then the foreman gets a JSON object containing
     the key associated with the chunk, e.g.
     
-        { "key": "8238539950397531954578546" }
+        {"key":"8238539950397531954578546"}
         
     If the computation failed, the foreman gets 3 credits returned to his
     account and the number of available credits is returned, e.g.
     
-        { "credits": 12 }
+        {"credits":12}
     
     Note that this call is _idempotent_; calling it actually deletes the given
     chunk (to prevent cheating). [2] If the address of the foreman associated
