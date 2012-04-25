@@ -68,6 +68,3 @@ error DiscoveryServiceException do
   status exception.code
   body exception.response
 end
-
-run! if app_file == $0
-end
