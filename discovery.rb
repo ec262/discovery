@@ -1,6 +1,7 @@
 require 'sinatra'
 require './config'
 
+
 #########################################
 ########### Foreman Methods #############
 #########################################
@@ -61,6 +62,6 @@ end
 
 error DiscoveryServiceException do
   exception = env['sinatra.error']
-  status exception.status_code
+  status exception.code
   body exception.response
 end

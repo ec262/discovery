@@ -30,6 +30,7 @@ configure do
   # Use custom exception handling
   set :raise_errors, Proc.new { false }
   set :show_exceptions, false
+  set :use_code, true # Will be necessary in Sinatra 1.4.x
 end
 
 configure :production, :development do
