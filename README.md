@@ -208,8 +208,8 @@ use the `redis-lock` library to manage these locks.
 Design decisions
 ----------------
 
-The protocol itself is designed to minimize communication between the discovery
-service and clients, and to keep clients from needing to accept incoming
+The EC262 protocol is designed to minimize communication between the discovery
+service and clients, and to obviate the need for clients to accept incoming
 requests from the service. (Clients only need to listen to incoming requests
 from other clients.) The discovery service should be totally transparent to
 users--the actual people behind the clients--and should require no human
