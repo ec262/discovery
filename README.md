@@ -208,12 +208,14 @@ use the `redis-lock` library to manage these locks.
 Design decisions
 ----------------
 
-The protocol itself is designed to minimize communication with the discovery
-service, and to keep clients from needing to write their own servers that
-accept incoming requests from the service. Instead, clients only need to listen
-to incoming requests from other clients. We ensure safety in the sense that
-foreman only pay (and workers will only get paid) when chunks are fully valid,
-though there are risks to liveness which are discussed in the next section.
+The protocol itself is designed to minimize communication between the discovery
+service and clients, and to keep clients from needing to accept incoming
+requests from the service. (Clients only need to listen to incoming requests
+from other clients.) The discovery service should be totally transparent to
+users--the actual people behind the clients--and should require no human
+intervention to run. The service ensure safety in the sense that foreman only
+pay (and workers will only get paid) when chunks are fully valid, though there
+are risks to liveness which are discussed in the next section.
 
 ### HTTP and JSON
 
