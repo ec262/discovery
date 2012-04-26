@@ -90,8 +90,8 @@ How the protocol works
     the chunk.
 
 
-The REST API
-------------
+The REST(-ful-ish) API
+----------------------
 
 ### Foreman API
 
@@ -191,8 +191,8 @@ This way we can quickly get the port and credit count of a client.
 
 Each chunk has its own hash, with fields for the assigned foreman, worker, and
 key. Only assigned workers can see the key; only the foreman can destroy the
-chunk. Chunks expire after a given interval (for now, 24h). We also keep a
-single key, `chunks`, that keeps track of the last chunk created.
+chunk. Chunks expire after 24h. We also keep a single key, `chunks`, that
+contains the ID of the last chunk created (more detail in next section).
 
 ### Locks
 
@@ -208,21 +208,6 @@ use the `redis-lock` library to manage these locks.
 Design decisions
 ----------------
 
-We chose to build on the web stack using Ruby and Sinatra mostly for simplicity
-and familiarity. Because nothing in the discovery service is performance
-critical, it is feasible to use HTTP. HTTP makes it simple to deploy to a PaaS
-like Heroku which presumably has better uptime than any machine we would
-administer ourselves. Also, it makes it easy for components written in
-different languages (Ruby, Python, and possibly others) to communicate. 
-
-Redis is useful both because it is very fast (all data is stored in memory) and
-because its semantics map very well onto our discovery service. Redis instances
-are generally persisted by a log that is written to disk. If we were to scale
-this system, Redis makes it relatively simple to set up master-slave
-replication. We could set up multiple front-ends to process requests, and all
-race conditions would be handled by using transactions in Redis and locks at
-the application level.
-
 The protocol itself is designed to minimize communication with the discovery
 service, and to keep clients from needing to write their own servers that
 accept incoming requests from the service. Instead, clients only need to listen
@@ -230,13 +215,44 @@ to incoming requests from other clients. We ensure safety in the sense that
 foreman only pay (and workers will only get paid) when chunks are fully valid,
 though there are risks to liveness which are discussed in the next section.
 
-Leases play an important role in this system. Worker registrations are really
-leases, since they automatically expire after a short period. We assume that
-workers will frequently go offline and so they must re-register at specified
-intervals. Similarly, chunks are merely "leased" to clients; they also expire
-after 24h. Individual chunks should not take longer than that to compute, and
-there is no reason to continue to keep outdated chunks in memory (since they
-will persist in the logs anyway).
+### HTTP and JSON
+
+We chose to build on the web stack using Ruby and Sinatra for the sake of
+simplicity and familiarity. Because nothing in the discovery service is
+performance critical, it is feasible to use HTTP. HTTP makes it simple to
+deploy to a PaaS like Heroku which presumably has better uptime than any
+machine that we administer ourselves. Also, HTTP makes it easy for components
+written in different languages (Ruby, Python, and possibly others) to
+communicate. Similarly, responses are encoded in JSON because it is simple and
+easy to use across languages and platforms.
+
+### Persistent state and replication
+
+Redis is useful both because it is very fast (all data is stored in memory) and
+because its semantics map very well onto our discovery service. Redis instances
+are generally persisted by a log that is written to disk. If we were to scale
+this system, Redis makes it relatively easy to set up master-slave replication.
+We could set up multiple front-ends to process requests, and race conditions
+would be handled by using transactions in Redis and locks at the application 
+level.
+
+### Leases
+
+Worker registrations are really leases, since they automatically expire after a
+short period. We assume that workers will frequently go offline and so they
+must re-register at specified intervals. Similarly, chunks are merely "leased"
+to clients; they also expire after 24h. Individual chunks should not take
+longer than that to compute, and there is no reason to keep outdated chunks in
+memory (since they will persist in the logs anyway for future analysis).
+
+### Unique identifiers
+
+Chunk IDs must be unique to ensure safety. If there were collisions, then
+malicious clients could cheat or disrupt the system by, say, retrieving keys 
+that they should not have access to. To generate unique chunk IDs, we store a
+single value in Redis that contains the highest-valued ID that has been
+generated. To get a new ID, we simply increment this value. Keys are guaranteed
+to be unique because incrementing in Redis is atomic. 
 
 
 Known vulnerabilities
