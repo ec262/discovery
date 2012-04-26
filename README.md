@@ -41,7 +41,7 @@ What's in this repo
     |-- lib/
     |   |-- chunks.rb           : Application logic related to chunks
     |   |-- exceptions.rb       : Exception definitions (incl. HTTP responses)
-    |   |-- json_responder.rb   : Rack middleware; makes every response JSON
+    |   |-- json_responder.rb   : Rack middleware to make every response JSON
     |   `-- worker.rb           : Application code related to workers
     |-- Procfile                : Tell Heroku how to run the app
     |-- Rakefile                : Helpful tasks; run `rake -T` to see them all
@@ -216,18 +216,27 @@ administer ourselves. Also, it makes it easy for components written in
 different languages (Ruby, Python, and possibly others) to communicate. 
 
 Redis is useful both because it is very fast (all data is stored in memory) and
-because its semantics map very well onto our discovery service. If we were to 
-scale this system, Redis makes it relatively simple to set up an independent
-master-slave repositories. We could set up multiple front-ends to process 
-requests, and all race conditions can be handled by using transactions and
-locks in Redis. 
+because its semantics map very well onto our discovery service. Redis instances
+are generally persisted by a log that is written to disk. If we were to scale
+this system, Redis makes it relatively simple to set up master-slave
+replication. We could set up multiple front-ends to process requests, and all
+race conditions would be handled by using transactions in Redis and locks at
+the application level.
 
 The protocol itself is designed to minimize communication with the discovery
 service, and to keep clients from needing to write their own servers that
 accept incoming requests from the service. Instead, clients only need to listen
 to incoming requests from other clients. We ensure safety in the sense that
 foreman only pay (and workers will only get paid) when chunks are fully valid,
-though there are risks to liveness which are discussed in the next section. 
+though there are risks to liveness which are discussed in the next section.
+
+Leases play an important role in this system. Worker registrations are in a
+sense leases, since they automatically expire after a short period. We
+assume that workers will frequently go offline and so they must re-register
+at specified intervals. Similarly, chunks are merely "leased" to clients;
+they also expire after 24h. Individual chunks should not take longer than
+that to compute, and there is no reason to continue to keep outdated chunks
+in memory (since they will persist in the logs anyway).
 
 
 Known vulnerabilities
