@@ -230,13 +230,13 @@ to incoming requests from other clients. We ensure safety in the sense that
 foreman only pay (and workers will only get paid) when chunks are fully valid,
 though there are risks to liveness which are discussed in the next section.
 
-Leases play an important role in this system. Worker registrations are in a
-sense leases, since they automatically expire after a short period. We
-assume that workers will frequently go offline and so they must re-register
-at specified intervals. Similarly, chunks are merely "leased" to clients;
-they also expire after 24h. Individual chunks should not take longer than
-that to compute, and there is no reason to continue to keep outdated chunks
-in memory (since they will persist in the logs anyway).
+Leases play an important role in this system. Worker registrations are really
+leases, since they automatically expire after a short period. We assume that
+workers will frequently go offline and so they must re-register at specified
+intervals. Similarly, chunks are merely "leased" to clients; they also expire
+after 24h. Individual chunks should not take longer than that to compute, and
+there is no reason to continue to keep outdated chunks in memory (since they
+will persist in the logs anyway).
 
 
 Known vulnerabilities
