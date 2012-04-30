@@ -67,23 +67,23 @@ describe 'Worker API' do
     worker["credits"].to_i.should == 50
   end
   
-  it "returns a key if you're assigned to a chunk" do
+  it "returns a key if you're assigned to a task" do
     workers = addrs.take(2).push("127.0.0.1")
-    chunks = make_chunks("1.2.3.4", 1, workers)
-    chunk_id = chunks.keys.first
-    get "/chunks/#{chunk_id}"
+    tasks = make_tasks("1.2.3.4", 1, workers)
+    task_id = tasks.keys.first
+    get "/tasks/#{task_id}"
     last_response.should be_ok
     response = JSON.parse(last_response.body)
-    response["key"].should == REDIS.hget("chunks:#{chunk_id}", "key")
+    response["key"].should == REDIS.hget("tasks:#{task_id}", "key")
   end
   
-  it "doesn't return a key if you're not assigned to a chunk" do
+  it "doesn't return a key if you're not assigned to a task" do
     workers = addrs.take(WORKERS_PER_CHUNK)
     workers.delete("127.0.0.1") # Make sure localhost isn't in workers
     workers.length.should == WORKERS_PER_CHUNK
-    chunks = make_chunks("1.2.3.4", 1, workers)
-    chunk_id = chunks.keys.first
-    get "/chunks/#{chunk_id}"
+    tasks = make_tasks("1.2.3.4", 1, workers)
+    task_id = tasks.keys.first
+    get "/tasks/#{task_id}"
     last_response.status.should == 404
     response = JSON.parse(last_response.body)
     response["key"].should be_nil

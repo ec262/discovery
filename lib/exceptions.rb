@@ -20,11 +20,11 @@ class InsufficientCredits < DiscoveryServiceException
   end
 end
 
-class UnknownChunk < DiscoveryServiceException
+class UnknownTask < DiscoveryServiceException
   def code; 404 end
   
   def response
-    { :error => "Unknown chunk" }
+    { :error => "Unknown task" }
   end
 end
 

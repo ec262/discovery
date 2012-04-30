@@ -27,10 +27,10 @@ task :seed, [:db, :worker_addr] do |t, args|
   seed_db_with_workers(addrs)
   add_worker(args.worker_addr)
 
-  # Create a chunk with a given worker
-  chunk_workers = addrs.take(2).push(args.worker_addr || "127.0.0.1")
-  chunks = make_chunks(addrs.last, 1, chunk_workers)
-  puts "Created chunks " + chunks.inspect
+  # Create a task with a given worker
+  task_workers = addrs.take(2).push(args.worker_addr || "127.0.0.1")
+  tasks = make_tasks(addrs.last, 1, task_workers)
+  puts "Created tasks " + tasks.inspect
 end
 
 namespace :test do
@@ -57,10 +57,10 @@ namespace :test do
   
     sh "heroku run rake seed[0,#{public_ip}]"
     call_remote do
-      get '/chunks/1'
-      post '/chunks?n=2'
+      get '/tasks/1'
+      post '/tasks?n=2'
       get '/'
-      delete '/chunks/2?valid=1'
+      delete '/tasks/2?valid=1'
     end
   end
 end

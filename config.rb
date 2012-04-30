@@ -3,7 +3,7 @@ require 'json'
 require 'redis'
 require 'redis-lock'
 
-require './lib/chunks'
+require './lib/tasks'
 require './lib/workers'
 require './lib/exceptions'
 require './lib/json_responder'
