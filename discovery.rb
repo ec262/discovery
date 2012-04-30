@@ -56,6 +56,17 @@ get '/' do
 end
 
 #########################################
+######### Development stuff #############
+#########################################
+
+# Danger! Deletes the database and seeds it
+get '/seed' do
+  REDIS.flushdb
+  seed_db(request.ip)
+end
+
+
+#########################################
 ############ Error Handling #############
 #########################################
 

@@ -21,16 +21,8 @@ task :seed, [:db, :worker_addr] do |t, args|
 
   REDIS.select(args.db.to_i || 0)
   REDIS.flushdb
-
-  # Basic seeding of workers
-  addrs = generate_addrs(20)
-  seed_db_with_workers(addrs)
-  add_worker(args.worker_addr)
-
-  # Create a task with a given worker
-  task_workers = addrs.take(2).push(args.worker_addr || "127.0.0.1")
-  tasks = make_tasks(addrs.last, 1, task_workers)
-  puts "Created tasks " + tasks.inspect
+  
+  seed_db(args.worker_addr)
 end
 
 namespace :test do
@@ -44,6 +36,7 @@ namespace :test do
     require 'socket'
     public_ip = UDPSocket.open {|s| s.connect('64.233.187.99', 1); s.addr.last }
   
+    # Mini DSL to make HTTP requests from the shell
     def call_remote  
       def method_missing(*args)
         method, path = args
@@ -55,8 +48,9 @@ namespace :test do
       yield
     end
   
-    sh "heroku run rake seed[0,#{public_ip}]"
+    # sh "heroku run rake seed[0,#{public_ip}]"
     call_remote do
+      get '/seed'
       get '/tasks/1'
       post '/tasks?n=2'
       get '/'

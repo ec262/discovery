@@ -44,3 +44,18 @@ def seed_db_with_workers(addrs)
     add_worker(addr)
   end
 end
+
+# Seeds the database with a given number of workers and a given worker
+def seed_db(extra_worker=nil, num_workers=21)
+  extra_worker ||= "127.0.0.1"
+  
+  # Basic seeding of workers
+  addrs = generate_addrs(num_workers - 1)
+  seed_db_with_workers(addrs)
+  add_worker(extra_worker)
+
+  # Create a task with a given worker
+  task_workers = addrs.take(2).push(extra_worker)
+  tasks = make_tasks(addrs.last, 1, task_workers)
+  puts "Created tasks " + tasks.inspect
+end
