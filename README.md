@@ -136,7 +136,7 @@ The REST(-ful-ish) API
 
   - `POST /workers?port=P&ttl=T`
     Register a worker to the worker pool by requesting IP address. Default port
-    is 2626. Workers can also specify a time to live in seconds; by default
+    is 26262. Workers can also specify a time to live in seconds; by default
     registrations last for 1m. Workers should re-register before their TTL
     period expires. Workers can also de-register at any time by setting a TTL
     of -1. Returns a JSON object containing information about the requester.

@@ -9,7 +9,7 @@ require './lib/exceptions'
 require './lib/json_responder'
 
 NUM_STARTING_CREDITS = 12
-DEFAULT_PORT = 2626
+DEFAULT_PORT = 26262
 DEFAULT_WORKER_TTL = 60
 DEFAULT_CHUNK_TTL = 86400 # 1 day
 LOCK_TIMEOUT = 10
