@@ -56,6 +56,5 @@ def seed_db(extra_worker=nil, num_workers=21)
 
   # Create a task with a given worker
   task_workers = addrs.take(2).push(extra_worker)
-  tasks = make_tasks(addrs.last, 1, task_workers)
-  return tasks.inspect
+  make_tasks(addrs.last, 1, task_workers)
 end
