@@ -97,7 +97,7 @@ The REST(-ful-ish) API
 
   - `POST /tasks?n=N`
     Get a list of tasks and associated workers. Foremen can specify the number
-    of tasks they want (1 by default). Chunks cost 3 credits each. If the
+    of tasks they want (1 by default). Tasks cost 3 credits each. If the
     foreman does not have sufficient credits, the call fails with status code
     406 (not acceptable).
     
@@ -128,7 +128,7 @@ The REST(-ful-ish) API
     Note that this call is _idempotent_; calling it actually deletes the given
     task (to prevent cheating). [2] If the address of the foreman associated
     with that task is not used to make this call, or if the task does not
-    exist, it returns 404 to prevent malicious behavior. Chunks expire after
+    exist, it returns 404 to prevent malicious behavior. Tasks expire after
     24h even if the delete method is not called.
     
           
@@ -179,7 +179,7 @@ grab as many available workers as we need.
 We keep a hash of every individual client by address, prefixed with "clients:".
 This way we can quickly get the port and credit count of a client.
 
-### Chunks
+### Tasks
 
     tasks:{id} (hash)
         foreman: {addr}
@@ -191,7 +191,7 @@ This way we can quickly get the port and credit count of a client.
 
 Each task has its own hash, with fields for the assigned foreman, worker, and
 key. Only assigned workers can see the key; only the foreman can destroy the
-task. Chunks expire after 24h. We also keep a single key, `tasks`, that
+task. Tasks expire after 24h. We also keep a single key, `tasks`, that
 contains the ID of the last task created (more detail in next section).
 
 ### Locks
@@ -201,7 +201,7 @@ contains the ID of the last task created (more detail in next section).
     lock:clients:{id}
 
 Foremen need to be locked when they request tasks, and their accounts are
-debited. Chunks need to be locked when foreman request their deletion. We
+debited. Tasks need to be locked when foreman request their deletion. We
 use the `redis-lock` library to manage these locks.
 
     
@@ -249,7 +249,7 @@ memory (since they will persist in the logs anyway for future analysis).
 
 ### Unique identifiers
 
-Chunk IDs must be unique to ensure safety. If there were collisions, then
+Task IDs must be unique to ensure safety. If there were collisions, then
 malicious clients could cheat or disrupt the system by, say, retrieving keys 
 that they should not have access to. To generate unique task IDs, we store a
 single value in Redis that contains the highest-valued ID that has been
