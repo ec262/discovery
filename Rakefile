@@ -48,7 +48,6 @@ namespace :test do
       yield
     end
   
-    # sh "heroku run rake seed[0,#{public_ip}]"
     call_remote do
       get '/seed'
       get '/tasks/1'
