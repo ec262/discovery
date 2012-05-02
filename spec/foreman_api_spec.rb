@@ -5,6 +5,18 @@ describe 'Foreman API' do
   def app
     Sinatra::Application
   end
+
+  def worker_addrs(response_obj)
+    addrs = []
+    response_obj.each_value do |workers|
+      workers.each do |worker_pair|
+        addr, port = worker_pair.split(':')
+        addrs << ({ addr: addr, port: port })
+      end
+    end
+    return addrs
+  end
+
   
   addrs = []
 
@@ -65,23 +77,48 @@ describe 'Foreman API' do
     last_response.status.should == 406
   end
 
-  it "gives you valid workers (unique; correct ports; not timed out; doesn't assign foreman to itself)" do
-    new_addr = generate_addrs(1)
-    add_worker(new_addr, 1234, -1)
+  it "doesn't assign the foreman to himself" do
+    # seed db so a completely filled request must include the foreman
+    REDIS.flushdb
+    seed_db_with_workers(generate_addrs(11))
     post '/tasks?n=4'
-    all_workers = []
     response = JSON.parse(last_response.body)
-    response.each_value.each do |workers|
-      workers.each do |worker_pair|
-        addr, port = worker_pair.split(":")
-        all_workers << addr
-        addr.should_not == '127.0.0.1'
-        worker = get_client(addr)
-        worker["port"].should == port
-        worker["expiry"].to_i.should > Time.now.to_i 
-      end
+    worker_addrs(response).each do |h|
+      h[:addr].should_not == '127.0.0.1'
     end
-    all_workers.uniq.should == all_workers
+    # request thus should not have been completely filled
+    response.count.should == 3
+  end
+
+  it "gives unique workers" do
+    post '/tasks?n=4'
+    response = JSON.parse(last_response.body)
+    workers = worker_addrs(response).map{ |h| h[:addr] }
+    workers.uniq.should == workers
+  end
+
+  it "doesn't give timed-out workers" do
+    # seed db so a completely filled request must include the timed-out worker
+    REDIS.flushdb
+    seed_db_with_workers(generate_addrs(11))
+    add_worker(generate_addrs(1), 1234, -1)
+    post '/tasks?n=4'
+    response = JSON.parse(last_response.body)
+    worker_addrs(response).each do |h|
+      worker = get_client(h[:addr])
+      worker["expiry"].to_i.should > Time.now.to_i 
+    end
+    # request thus should not have been completely filled
+    response.count.should == 3
+  end
+
+  it "gives the correct port for workers" do
+    post '/tasks?n=4'
+    response = JSON.parse(last_response.body)
+    worker_addrs(response).each do |h|
+      worker = get_client(h[:addr])
+      worker["port"].should == h[:port]
+    end
   end
     
   it "returns the right key; doesn't return credits; pays workers when you report that a task is correct" do
