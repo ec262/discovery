@@ -36,6 +36,7 @@ def generate_addrs(n, localhost=true)
     Array.new(4).map{rand(256)}.join('.')
   end
   addrs << '127.0.0.1' if localhost
+  return addrs
 end
 
 # Adds the given list of addresses to the worker pool. Useful for testing.

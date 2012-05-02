@@ -15,29 +15,33 @@ describe 'Foreman API' do
   end
   
   it "gives you tasks when you request them" do
-    post '/tasks?n=2'
-    last_response.should be_ok
-    response = JSON.parse(last_response.body)
-    response.keys.length.should == 2
-    response.each_value.each do |workers|
-      workers.length.should == WORKERS_PER_CHUNK
-    end
-  end
-  
-  it "lets you request just one task" do
     post '/tasks'
     last_response.should be_ok
+  end
+
+  it "lets you request just one task" do
+    post '/tasks'
     response = JSON.parse(last_response.body)
     response.keys.length.should == 1
+  end
+
+  it "gives you the correct number of tasks" do
+    post '/tasks?n=3'
+    response = JSON.parse(last_response.body)
+    response.keys.length.should == 3
+  end
+
+  it "gives you the correct number of workers per task" do
+    post '/tasks'
+    response = JSON.parse(last_response.body)
     response.each_value.each do |workers|
       workers.length.should == WORKERS_PER_CHUNK
     end
-  end
+  end 
   
   it "lets you request workers if you've never registered before" do
     REDIS.flushdb
-    addrs = generate_addrs(10)
-    addrs.delete("127.0.0.1")
+    addrs = generate_addrs(12, false)
     seed_db_with_workers(addrs)
     post '/tasks?n=2'
     last_response.should be_ok
@@ -53,7 +57,14 @@ describe 'Foreman API' do
     post '/tasks?n=4'
     last_response.should be_ok
   end
-  
+
+  it "doesn't give you tasks unless you have enough credits" do
+    addrs = generate_addrs(100)
+    seed_db_with_workers(addrs)
+    post '/tasks?n=20'
+    last_response.status.should == 406
+  end
+
   it "gives you valid workers (unique; correct ports; not timed out; doesn't assign foreman to itself)" do
     new_addr = generate_addrs(1)
     add_worker(new_addr, 1234, -1)
@@ -70,14 +81,7 @@ describe 'Foreman API' do
         worker["expiry"].to_i.should > Time.now.to_i 
       end
     end
-    all_workers.uniq == all_workers
-  end
-  
-  it "doesn't give you tasks unless you have enough credits" do
-    addrs = generate_addrs(100)
-    seed_db_with_workers(addrs)
-    post '/tasks?n=20'
-    last_response.status.should == 406
+    all_workers.uniq.should == all_workers
   end
     
   it "returns the right key; doesn't return credits; pays workers when you report that a task is correct" do
