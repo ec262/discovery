@@ -18,7 +18,7 @@ describe 'Worker API' do
     REDIS.flushdb
     post "/workers"
     last_response.should be_ok
-    worker = JSON.parse(last_response.body)
+    worker = last_response.json
     worker["addr"].should == "127.0.0.1"
   end
   
@@ -73,7 +73,7 @@ describe 'Worker API' do
     task_id = tasks.keys.first
     get "/tasks/#{task_id}"
     last_response.should be_ok
-    response = JSON.parse(last_response.body)
+    response = last_response.json
     response["key"].should == REDIS.hget("tasks:#{task_id}", "key")
   end
   
@@ -85,7 +85,7 @@ describe 'Worker API' do
     task_id = tasks.keys.first
     get "/tasks/#{task_id}"
     last_response.status.should == 404
-    response = JSON.parse(last_response.body)
+    response = last_response.json
     response["key"].should be_nil
   end
   

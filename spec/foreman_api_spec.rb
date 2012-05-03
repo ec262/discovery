@@ -33,19 +33,19 @@ describe 'Foreman API' do
 
   it "lets you request just one task" do
     post '/tasks'
-    response = JSON.parse(last_response.body)
+    response = last_response.json
     response.keys.length.should == 1
   end
 
   it "gives you the correct number of tasks" do
     post '/tasks?n=3'
-    response = JSON.parse(last_response.body)
+    response = last_response.json
     response.keys.length.should == 3
   end
 
   it "gives you the correct number of workers per task" do
     post '/tasks'
-    response = JSON.parse(last_response.body)
+    response = last_response.json
     response.each_value.each do |workers|
       workers.length.should == WORKERS_PER_CHUNK
     end
@@ -82,7 +82,7 @@ describe 'Foreman API' do
     REDIS.flushdb
     seed_db_with_workers(generate_addrs(11))
     post '/tasks?n=4'
-    response = JSON.parse(last_response.body)
+    response = last_response.json
     worker_addrs(response).each do |h|
       h[:addr].should_not == '127.0.0.1'
     end
@@ -92,7 +92,7 @@ describe 'Foreman API' do
 
   it "gives unique workers" do
     post '/tasks?n=4'
-    response = JSON.parse(last_response.body)
+    response = last_response.json
     workers = worker_addrs(response).map{ |h| h[:addr] }
     workers.uniq.should == workers
   end
@@ -103,7 +103,7 @@ describe 'Foreman API' do
     seed_db_with_workers(generate_addrs(11))
     add_worker(generate_addrs(1), 1234, -1)
     post '/tasks?n=4'
-    response = JSON.parse(last_response.body)
+    response = last_response.json
     worker_addrs(response).each do |h|
       worker = get_client(h[:addr])
       worker["expiry"].to_i.should > Time.now.to_i 
@@ -114,7 +114,7 @@ describe 'Foreman API' do
 
   it "gives the correct port for workers" do
     post '/tasks?n=4'
-    response = JSON.parse(last_response.body)
+    response = last_response.json
     worker_addrs(response).each do |h|
       worker = get_client(h[:addr])
       worker["port"].should == h[:port]
@@ -123,7 +123,7 @@ describe 'Foreman API' do
     
   it "returns the right key; doesn't return credits; pays workers when you report that a task is correct" do
     post '/tasks?n=4'
-    tasks = JSON.parse(last_response.body)
+    tasks = last_response.json
     tasks.each_pair do |task_id, workers|
       actual_key = REDIS.hget("tasks:#{task_id}", "key")
       worker_credits = {}
@@ -133,7 +133,7 @@ describe 'Foreman API' do
       end
       delete "/tasks/#{task_id}?valid=1"
       last_response.should be_ok
-      response = JSON.parse(last_response.body)
+      response = last_response.json
       response["key"].should == actual_key
       get_client("127.0.0.1")["credits"].to_i.should == 0
       worker_credits.each_pair do |addr, credits|
@@ -144,7 +144,7 @@ describe 'Foreman API' do
   
   it "doesn't return a key; returns your credits; doesn't pay workers when you report that a task is incorrect" do
     post '/tasks?n=4'
-    tasks = JSON.parse(last_response.body)
+    tasks = last_response.json
     tasks.each_pair do |task_id, workers|
       actual_key = REDIS.hget("tasks:#{task_id}", "key")
       worker_credits = {}
@@ -154,7 +154,7 @@ describe 'Foreman API' do
       end
       delete "/tasks/#{task_id}"
       last_response.should be_ok
-      response = JSON.parse(last_response.body)
+      response = last_response.json
       response["key"].should be_nil
       response["credits"].should be_a(Fixnum)
       worker_credits.each_pair do |addr, credits|
@@ -163,10 +163,10 @@ describe 'Foreman API' do
     end
     get_client("127.0.0.1")["credits"].to_i.should == 12
   end
-      
+        
   it "doesn't let you report that a task is correct then incorrect" do
     post '/tasks?n=4'
-    tasks = JSON.parse(last_response.body)
+    tasks = last_response.json
     tasks.each_pair do |task_id, workers|
       actual_key = REDIS.hget("tasks:#{task_id}", "key")
       delete "/tasks/#{task_id}"
@@ -178,7 +178,7 @@ describe 'Foreman API' do
   
   it "doesn't let you report that a task is incorrect, then correct" do
     post '/tasks?n=4'
-    tasks = JSON.parse(last_response.body)
+    tasks = last_response.json
     tasks.each_pair do |task_id, workers|
       actual_key = REDIS.hget("tasks:#{task_id}", "key")
       delete "/tasks/#{task_id}?valid=1"
