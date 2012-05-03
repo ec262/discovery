@@ -43,20 +43,33 @@ describe 'Worker API' do
       worker["credits"].to_i.should == NUM_STARTING_CREDITS
     end
   end
-  
+
   it "doesn't give you more credits when you register again" do
-    addr = addrs.last
-    post "/#{addr}"
-    worker = get_client(addr)
+    REDIS.flushdb
+    # register once
+    post "/workers"
+    worker = get_client("127.0.0.1")
+    worker["credits"].to_i.should == NUM_STARTING_CREDITS
+    # register again
+    post "/workers"
+    worker = get_client("127.0.0.1")
     worker["credits"].to_i.should == NUM_STARTING_CREDITS
   end
   
   it "doesn't reset your credits when you register again" do
-    addr = addrs.last
-    REDIS.hmset("clients:#{addr}", "credits", 50)
-    post "/workers", params={:addr=>addr}
-    worker = get_client(addr)
+    REDIS.flushdb
+    # register once
+    post "/workers"
+    worker = get_client("127.0.0.1")
+    worker["credits"].to_i.should == NUM_STARTING_CREDITS
+    # change credits
+    REDIS.hmset("clients:127.0.0.1", "credits", 50)
+    # register again
+    post "/workers", params={:port=>1234}
+    worker = get_client("127.0.0.1")
     worker["credits"].to_i.should == 50
+    # ensure we've actually checked the correct worker
+    worker["port"].to_i.should == 1234
   end
   
   it "returns a key if you're assigned to a task" do
