@@ -51,14 +51,6 @@ describe 'Worker API' do
     worker["credits"].to_i.should == NUM_STARTING_CREDITS
   end
   
-  it "doesn't give you more credits after a delete" do
-    addr = addrs.pop
-    delete "/workers/#{addr}"
-    post "/workers", params={:addr=>addr}
-    worker = get_client(addr)
-    worker["credits"].to_i.should == NUM_STARTING_CREDITS
-  end
-  
   it "doesn't reset your credits when you register again" do
     addr = addrs.last
     REDIS.hmset("clients:#{addr}", "credits", 50)
@@ -90,5 +82,3 @@ describe 'Worker API' do
   end
   
 end  
-
-      
