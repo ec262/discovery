@@ -86,7 +86,7 @@ end
 # Threadsafe way of doing task deletion. Prevents foreman from trying to both
 # get a task key and get a "refund" for it. If task was valid, returns a key
 # and gives credits to workers. Otherwise, refund credits to the foreman.
-def atomic_delete_task(task_id, foreman_addr, valid)
+def atomic_delete_task(task_id, foreman_addr, valid, missing)
   # Lock the task in question
   REDIS.lock("tasks:#{task_id}", LOCK_TIMEOUT, LOCK_MAX_ATTEMPTS)
   
@@ -96,11 +96,18 @@ def atomic_delete_task(task_id, foreman_addr, valid)
   raise UnknownTask unless (task != {}) && (task["foreman"] == foreman_addr)
   
   REDIS.del("tasks:#{task_id}")
+  
   if valid
+    # Assign credits (or don't) to workers  
     task["workers"].split(",").each do |worker|
       REDIS.hincrby("clients:#{worker}", "credits", 1)
-      REDIS.hincrby("clients:#{worker}", "tasks_complete", 1) # Could be useful for analysis
+      if worker == missing
+        REDIS.hincrby("clients:#{worker}", "tasks_failed", 1) # Could be useful for analysis
+      else
+        REDIS.hincrby("clients:#{worker}", "tasks_completed", 1) # Keep track of failed tasks
+      end
     end
+    
     { :key => task["key"] }
   else
     { :credits => REDIS.hincrby("clients:#{foreman_addr}", "credits", WORKERS_PER_CHUNK) }

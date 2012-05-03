@@ -24,7 +24,8 @@ delete '/tasks/:id' do
   foreman_addr = request.ip
   task_id = params[:id]
   valid = (params[:valid] == '1')
-  atomic_delete_task(task_id, foreman_addr, valid)
+  missing = params[:missing]
+  atomic_delete_task(task_id, foreman_addr, valid, missing)
 end
 
 

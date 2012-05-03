@@ -163,6 +163,27 @@ describe 'Foreman API' do
     end
     get_client("127.0.0.1")["credits"].to_i.should == 12
   end
+  
+  it "assigns credits correctly when you report a missing worker" do
+    post '/tasks'
+    task = last_response.json
+    task_id = task.keys.first
+    worker_addrs = task.values.first.map{|w| w.split(":")[0] }
+    missing_worker_addr = worker_addrs.first
+    delete "/tasks/#{task_id}?valid=1&missing=#{missing_worker_addr}"
+    
+    worker_addrs.each do |addr|
+      worker = get_client(addr)
+      worker["credits"].to_i.should == NUM_STARTING_CREDITS + 1
+      if addr == missing_worker_addr
+        worker["tasks_completed"].to_i.should == 0
+        worker["tasks_failed"].to_i.should == 1
+      else
+        worker["tasks_completed"].to_i.should == 1
+        worker["tasks_failed"].to_i.should == 0
+      end
+    end
+  end
         
   it "doesn't let you report that a task is correct then incorrect" do
     post '/tasks?n=4'

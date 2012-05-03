@@ -113,7 +113,7 @@ The REST(-ful-ish) API
     more workers.
     
           
-  - `DELETE /tasks/:id?(valid=1)`
+  - `DELETE /tasks/:id?(valid=1)&missing=addr`
     Tell the discovery server that a task computation is valid or has failed.
     If the computation is valid, then the foreman gets a JSON object containing
     the Base64-encoded key associated with the task, e.g.
@@ -124,6 +124,9 @@ The REST(-ful-ish) API
     account and the number of available credits is returned, e.g.
     
         {"credits":12}
+    
+    If one of the workers did not agree with the other two, the foreman may
+    return that workers address as the parameter "missing".
     
     Note that this call is _idempotent_; calling it actually deletes the given
     task (to prevent cheating). [2] If the address of the foreman associated
