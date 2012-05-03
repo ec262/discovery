@@ -113,5 +113,32 @@ describe 'Worker API' do
       end
     end
   end
+  
+
+  describe "Client status (GET /)" do
+    context "when registered" do
+      before(:each) do
+        post "/workers"
+      end
+
+      it "allows clients to request their own info" do
+        get "/"
+        last_response.should be_ok
+      end
+
+      it "returns info about the requester" do
+        get "/"
+        info = last_response.json
+        info["addr"].should == "127.0.0.1"
+      end
+    end
+
+    context "when not registered" do
+      it "doesn't return any info" do
+        get "/"
+        last_response.status.should == 404
+      end
+    end
+  end
 
 end  
