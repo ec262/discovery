@@ -131,10 +131,14 @@ describe 'Foreman API' do
     
   describe "Task completion (DELETE /tasks/:id)" do
     context "when you report a task is correct" do
-      it "returns the right key; doesn't return credits; pays workers" do
+      before(:each) do
+        # create a task
         post '/tasks?n=4'
-        tasks = last_response.json
-        tasks.each_pair do |task_id, workers|
+        @tasks = last_response.json
+      end
+
+      it "returns the right key; doesn't return credits; pays workers" do
+        @tasks.each_pair do |task_id, workers|
           actual_key = REDIS.hget("tasks:#{task_id}", "key")
           worker_credits = {}
           workers.each do |worker_pair|
@@ -153,9 +157,7 @@ describe 'Foreman API' do
       end
 
       it "doesn't let you later report it incorrect" do
-        post '/tasks?n=4'
-        tasks = last_response.json
-        tasks.each_pair do |task_id, workers|
+        @tasks.each_pair do |task_id, workers|
           actual_key = REDIS.hget("tasks:#{task_id}", "key")
           delete "/tasks/#{task_id}"
           last_response.should be_ok
@@ -166,10 +168,14 @@ describe 'Foreman API' do
     end
     
     context "when you report a task is incorrect" do
-      it "doesn't return a key; returns your credits; doesn't pay workers" do
+      before(:each) do
+        # create a task
         post '/tasks?n=4'
-        tasks = last_response.json
-        tasks.each_pair do |task_id, workers|
+        @tasks = last_response.json
+      end
+
+      it "doesn't return a key; returns your credits; doesn't pay workers" do
+        @tasks.each_pair do |task_id, workers|
           actual_key = REDIS.hget("tasks:#{task_id}", "key")
           worker_credits = {}
           workers.each do |worker_pair|
@@ -189,9 +195,7 @@ describe 'Foreman API' do
       end
 
       it "doesn't let you later report it correct" do
-        post '/tasks?n=4'
-        tasks = last_response.json
-        tasks.each_pair do |task_id, workers|
+        @tasks.each_pair do |task_id, workers|
           actual_key = REDIS.hget("tasks:#{task_id}", "key")
           delete "/tasks/#{task_id}?valid=1"
           last_response.should be_ok
